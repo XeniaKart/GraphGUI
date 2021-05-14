@@ -29,17 +29,16 @@ import controller.Scroller
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 
-var nn = 10000
-var nn2 = 30
-var barnesHutTheta = 1.2
-var jitterTolerance = 1.0
-var linLogMode = false
-var scalingRatio = 2.0
-var gravity = 1.0
-var strongGravityMode = false
-var outboundAttractionDistribution = false
-
 class MainView : View("Graph") {
+    var countIterations = 10000
+    var countNodes = 30
+    var barnesHutTheta = 1.2
+    var jitterTolerance = 1.0
+    var linLogMode = false
+    var scalingRatio = 2.0
+    var gravity = 1.0
+    var strongGravityMode = false
+    var outboundAttractionDistribution = false
     var randomGraph = false
     var graph: GraphView<String, Double>? = null
     var boolDirect = true
@@ -104,7 +103,7 @@ class MainView : View("Graph") {
                     label("Max count of nodes:")
                     textfield("30") {
                         action {
-                            nn2 = this.text.toInt()
+                            countNodes = this.text.toInt()
                         }
                     }
                 }
@@ -121,7 +120,7 @@ class MainView : View("Graph") {
                         if (targetPath == "empty") {
                             targetPath = "randomGraph.csv"
                         }
-                        graph = GraphView(graphSetting.createRandomGraph(targetPath, nn2))
+                        graph = GraphView(graphSetting.createRandomGraph(targetPath, countNodes))
                         graphCreate = true
                         randomGraph = true
                         a.clear()
@@ -150,7 +149,7 @@ class MainView : View("Graph") {
                     label("Number of iteration:")
                     textfield("10000") {
                         action {
-                            nn = this.text.toInt()
+                            countIterations = this.text.toInt()
                         }
                     }
                 }
@@ -169,7 +168,7 @@ class MainView : View("Graph") {
                 }
                 hbox(5) {
                     label("Gravity:")
-                    textfield("10000") {
+                    textfield("1.0") {
                         action {
                             gravity = this.text.toDouble()
                         }
@@ -177,7 +176,7 @@ class MainView : View("Graph") {
                 }
                 hbox(5) {
                     label("BarnesHutTheta:")
-                    textfield("10000") {
+                    textfield("1.0") {
                         action {
                             barnesHutTheta = this.text.toDouble()
                         }
@@ -199,7 +198,7 @@ class MainView : View("Graph") {
                 }
             }
 
-            val sep = separator(Orientation.VERTICAL)
+            separator(Orientation.VERTICAL)
 
             a = pane() {
                 graph?.let { add(it) }
@@ -404,7 +403,7 @@ class MainView : View("Graph") {
 
         val startTime = System.currentTimeMillis()
         var i = 0
-        var nsteps = nn
+        var nsteps = countIterations
         var targetChangePerNode = 0.0
         var targetSteps = 0
         var seed: Long? = null

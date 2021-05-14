@@ -7,49 +7,49 @@ import javafx.scene.input.ScrollEvent
 import javafx.scene.layout.Pane
 
 class Scroller: Controller() {
-    var x = 0.0
-    var y = 0.0
-    var xx = 0.0
-    var yy = 0.0
+    var coordCursorPressedX = 0.0
+    var coordCursorPressedY = 0.0
+    var coordinatePanelX = 0.0
+    var coordinatePanelY = 0.0
     fun scroll(event: ScrollEvent) {
         if (event.target !is Pane) {
             return
         }
-        val v = check(event)
+        val panelWithGraph = check(event)
         if (event.deltaY > 0) {
-            v.scaleX *= event.deltaY / 30
-            v.scaleY *= event.deltaY / 30
+            panelWithGraph.scaleX *= event.deltaY / 30
+            panelWithGraph.scaleY *= event.deltaY / 30
         } else {
-            v.scaleX /= (-event.deltaY / 30)
-            v.scaleY /= (-event.deltaY / 30)
+            panelWithGraph.scaleX /= (-event.deltaY / 30)
+            panelWithGraph.scaleY /= (-event.deltaY / 30)
         }
 
     }
 
     fun entered(event: MouseEvent) {
-        val v = check(event)
-        if (!event.isSecondaryButtonDown)
-            v.scene.cursor = Cursor.HAND
+        val panelWithGraph = check(event)
+        if (!event.isPrimaryButtonDown)
+            panelWithGraph.scene.cursor = Cursor.HAND
     }
 
     fun pressed(event: MouseEvent) {
-        val v = check(event)
-        if (!event.isSecondaryButtonDown)
+        val panelWithGraph = check(event)
+        if (!event.isPrimaryButtonDown)
             return
-        v.scene.cursor =  Cursor.CLOSED_HAND
+        panelWithGraph.scene.cursor =  Cursor.CLOSED_HAND
         event.consume()
-        x = event.x
-        y = event.y
-        xx = v.translateX
-        yy = v.translateY
+        coordCursorPressedX = event.x
+        coordCursorPressedY = event.y
+        coordinatePanelX = panelWithGraph.translateX
+        coordinatePanelY = panelWithGraph.translateY
     }
 
     fun dragged(event: MouseEvent) {
-        if (!event.isSecondaryButtonDown || event.target !is Pane)
+        if (!event.isPrimaryButtonDown || event.target !is Pane)
             return
-        val v = check(event)
-        v.translateX = xx + event.x - x
-        v.translateY = yy + event.y - y
+        val panelWithGraph = check(event)
+        panelWithGraph.translateX = coordinatePanelX + (event.x - coordCursorPressedX)
+        panelWithGraph.translateY = coordinatePanelY + (event.y - coordCursorPressedY)
         event.consume()
     }
 
@@ -61,7 +61,7 @@ class Scroller: Controller() {
 
     fun exited(event: MouseEvent) {
         val v = check(event)
-        if (!event.isSecondaryButtonDown)
+        if (!event.isPrimaryButtonDown)
             v.scene.cursor = Cursor.DEFAULT
     }
 
