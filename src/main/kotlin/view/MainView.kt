@@ -28,7 +28,10 @@ import kotlin.collections.HashMap
 import controller.Scroller
 import javafx.scene.layout.Pane
 
-class MainView : View("Graph.Graph visualizer") {
+var nn = 10000
+var nn2 = 30
+
+class MainView : View("Graph") {
     var randomGraph = false
     var graph: GraphView<String, Double>? = null
     var boolDirect = true
@@ -66,6 +69,14 @@ class MainView : View("Graph.Graph visualizer") {
                         }
                     }
                 }
+                hbox(5) {
+                    label("Max count of nodes:")
+                    textfield("30") {
+                        action {
+                            nn2 = this.text.toInt()
+                        }
+                    }
+                }
                 textfield {
                     action {
                         val intermediatePath = this.text
@@ -79,7 +90,7 @@ class MainView : View("Graph.Graph visualizer") {
                         if (targetPath == "empty") {
                             targetPath = "randomGraph.csv"
                         }
-                        graph = GraphView(graphSetting.createRandomGraph(targetPath))
+                        graph = GraphView(graphSetting.createRandomGraph(targetPath, nn2))
                         graphCreate = true
                         randomGraph = true
                         a.clear()
@@ -102,6 +113,14 @@ class MainView : View("Graph.Graph visualizer") {
                         a.clear()
                         a.apply { add(graph!!) }
                         drawRandomGraph()
+                    }
+                }
+                hbox(5) {
+                    label("Number of iteration:")
+                    textfield("10000") {
+                        action {
+                            nn = this.text.toInt()
+                        }
                     }
                 }
                 button("Make layout") {
@@ -319,7 +338,7 @@ class MainView : View("Graph.Graph visualizer") {
 
         val startTime = System.currentTimeMillis()
         var i = 0
-        var nsteps = 0
+        var nsteps = nn
         var targetChangePerNode = 0.0
         var targetSteps = 0
         var seed: Long? = null
@@ -345,7 +364,7 @@ class MainView : View("Graph.Graph visualizer") {
             System.exit(1)
         }
         val output = "myGraph"
-        nsteps = 10000
+//        nsteps = 10000
         if (nsteps == 0 && targetChangePerNode == 0.0) {
             System.err.println("Either --nsteps or --targetChangePerNode must be set!")
             System.exit(1)

@@ -22,14 +22,15 @@ object graphSetting {
         val label = booleanProperty()
     }
 
-    fun createRandomGraph(path: String): Graph<String, Double> = Graph<String, Double>().apply {
+    fun createRandomGraph(path: String, number: Int): Graph<String, Double> = Graph<String, Double>().apply {
+
 //        val file = File(path)
         val writer: PrintWriter = PrintWriter(path)
         writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
         var count = 0
-        for (i in (0..30)) {
+        for (i in (0..number)) {
 //            addVertex(i.toString())
-            for (j in i + 1..30) {
+            for (j in i + 1..number) {
                 val a = abs(Random.nextInt() % 6)
                 val b = abs(Random.nextInt() % 2)
                 val m = abs(Random.nextDouble())

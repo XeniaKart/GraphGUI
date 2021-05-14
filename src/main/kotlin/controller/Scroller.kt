@@ -16,8 +16,14 @@ class Scroller: Controller() {
             return
         }
         val v = check(event)
-        v.scaleX += event.deltaY / 200
-        v.scaleY += event.deltaY / 200
+        if (event.deltaY > 0) {
+            v.scaleX *= event.deltaY / 30
+            v.scaleY *= event.deltaY / 30
+        } else {
+            v.scaleX /= (-event.deltaY / 30)
+            v.scaleY /= (-event.deltaY / 30)
+        }
+
     }
 
     fun entered(event: MouseEvent) {
