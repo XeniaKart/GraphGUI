@@ -30,6 +30,7 @@ import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 
 class MainView : View("Graph") {
+
     var countIterations = 10000
     var countNodes = 30
     var barnesHutTheta = 1.2
