@@ -125,6 +125,7 @@ class MainView : View("Graph.Graph visualizer") {
         val scroller = find(Scroller::class)
         a.setOnScroll { e -> e?.let { scroller.scroll(it) } }
         a.setOnMouseEntered { e -> e?.let { scroller.entered(it) } }
+        a.setOnMousePressed { e -> e?.let { scroller.pressed(it) } }
         a.setOnMouseDragged { e -> e?.let { scroller.dragged(it) } }
         a.setOnMouseReleased { e -> e?.let { scroller.released(it) } }
         a.setOnMouseExited { e -> e?.let { scroller.exited(it) } }
