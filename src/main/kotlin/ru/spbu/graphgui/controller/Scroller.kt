@@ -1,12 +1,13 @@
 package ru.spbu.graphgui.controller
+
 import javafx.scene.Cursor
 import javafx.scene.Node
-import tornadofx.Controller
 import javafx.scene.input.MouseEvent
 import javafx.scene.input.ScrollEvent
 import javafx.scene.layout.Pane
+import tornadofx.Controller
 
-class Scroller: Controller() {
+class Scroller : Controller() {
     var coordCursorPressedX = 0.0
     var coordCursorPressedY = 0.0
     var coordinatePanelX = 0.0
@@ -36,7 +37,7 @@ class Scroller: Controller() {
         val panelWithGraph = check(event)
         if (!event.isPrimaryButtonDown)
             return
-        panelWithGraph.scene.cursor =  Cursor.CLOSED_HAND
+        panelWithGraph.scene.cursor = Cursor.CLOSED_HAND
         event.consume()
         coordCursorPressedX = event.x
         coordCursorPressedY = event.y

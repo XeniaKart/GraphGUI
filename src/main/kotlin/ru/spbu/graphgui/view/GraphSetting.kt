@@ -1,4 +1,4 @@
-package view
+package ru.spbu.graphgui.view
 
 import ru.spbu.graphgui.model.Graph
 import tornadofx.booleanProperty
@@ -25,7 +25,7 @@ object graphSetting {
     fun createRandomGraph(path: String, number: Int): Graph<String, Double> = Graph<String, Double>().apply {
 
 //        val file = File(path)
-        val writer: PrintWriter = PrintWriter(path)
+        val writer = PrintWriter(path)
         writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
         var count = 0
         for (i in (0..number)) {

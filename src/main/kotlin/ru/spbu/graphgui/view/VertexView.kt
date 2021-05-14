@@ -1,4 +1,4 @@
-package view
+package ru.spbu.graphgui.view
 
 import javafx.beans.property.DoubleProperty
 import javafx.scene.paint.Color

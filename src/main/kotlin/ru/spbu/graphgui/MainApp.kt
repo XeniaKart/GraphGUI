@@ -2,11 +2,11 @@ package ru.spbu.graphgui
 
 import javafx.stage.Stage
 import ru.spbu.graphgui.styles.Styles
+import ru.spbu.graphgui.view.MainView
 import tornadofx.App
 import tornadofx.launch
-import view.MainView
 
-class MainApp : App(MainView:: class, Styles::class) {
+class MainApp : App(MainView::class, Styles::class) {
     override fun start(stage: Stage) {
         stage.width = 800.0
         stage.height = 800.0

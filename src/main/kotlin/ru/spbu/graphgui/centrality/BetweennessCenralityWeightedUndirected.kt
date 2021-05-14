@@ -7,11 +7,10 @@ import edu.uci.ics.jung.graph.util.EdgeType
 import org.apache.commons.collections15.Transformer
 import java.util.*
 import kotlin.collections.ArrayDeque
-import kotlin.collections.HashMap
 
 class BetweennessCenralityWeightedUnidirected {
 
-    var edgeCount_Directed = 0
+    var edgeCountDirected = 0
 
 
     inner class MyNode(var id: String) {
@@ -21,14 +20,14 @@ class BetweennessCenralityWeightedUnidirected {
     }
 
     inner class MyLink(var weight: Double) {
-        var id: Int = edgeCount_Directed++
+        var id: Int = edgeCountDirected++
         override fun toString(): String {
             return "E$id"
         }
 
     }
 
-    fun BetweennessCentralityScoreUndirected(
+    fun betweennessCentralityScoreUndirected(
         distinctNodes: ArrayDeque<String>,
         sourceVertex: ArrayDeque<String>,
         targetVertex: ArrayDeque<String>,
@@ -63,10 +62,10 @@ class BetweennessCenralityWeightedUnidirected {
         }
         val wtTransformer: Transformer<MyLink, Double> =
             Transformer { link -> link.weight }
-        val BC1 = BetweennessCentrality(g, wtTransformer)
+        val bc1 = BetweennessCentrality(g, wtTransformer)
 
         for (i in graphNodesOnly.indices) {
-            valueCentralities[graphNodesOnly[i].id] = BC1.getVertexScore(graphNodesOnly[i]) ?: 0.0
+            valueCentralities[graphNodesOnly[i].id] = bc1.getVertexScore(graphNodesOnly[i]) ?: 0.0
 //            println(
 //                "Model.Graph.Model.Graph Node " + graphNodesOnly[i] + " Betweenness Centrality " + valueCentralities[graphNodesOnly[i].id]
 //            )

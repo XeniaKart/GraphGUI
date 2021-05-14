@@ -1,10 +1,11 @@
 package ru.spbu.graphgui.controller
-import view.VertexView
+
 import javafx.scene.Cursor
 import javafx.scene.input.MouseEvent
+import ru.spbu.graphgui.view.VertexView
 import tornadofx.Controller
 
-class VertexDragController: Controller() {
+class VertexDragController : Controller() {
     fun entered(event: MouseEvent) {
         val v = check(event)
         if (!event.isPrimaryButtonDown)
@@ -15,7 +16,7 @@ class VertexDragController: Controller() {
         val v = check(event)
         if (!event.isPrimaryButtonDown)
             return
-        v.scene.cursor =  Cursor.CLOSED_HAND
+        v.scene.cursor = Cursor.CLOSED_HAND
         event.consume()
     }
 

@@ -1,15 +1,12 @@
-package view
+package ru.spbu.graphgui.view
 
-import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
-import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
 //import java.util.*
-import javafx.scene.paint.Color
 //import jdk.internal.misc.Signal.handle
-import tornadofx.*
-import java.io.PrintWriter
-import kotlin.random.Random
-import org.gephi.graph.api.Graph
+import javafx.geometry.Orientation
+import javafx.scene.layout.Pane
 import javafx.scene.layout.StackPane
+import javafx.scene.paint.Color
+import org.gephi.graph.api.Graph
 import org.gephi.graph.api.GraphController
 import org.gephi.graph.api.Node
 import org.gephi.io.exporter.api.ExportController
@@ -20,13 +17,14 @@ import org.gephi.layout.plugin.forceAtlas2.ForceAtlas2
 import org.gephi.layout.spi.Layout
 import org.gephi.project.api.ProjectController
 import org.openide.util.Lookup
-import java.io.*
-import java.util.*
-import kotlin.collections.ArrayDeque
-import kotlin.collections.HashMap
+import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
+import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
 import ru.spbu.graphgui.controller.Scroller
-import javafx.geometry.Orientation
-import javafx.scene.layout.Pane
+import tornadofx.*
+import java.io.*
+import kotlin.math.floor
+import kotlin.random.Random
+import kotlin.system.exitProcess
 
 class MainView : View("Graph") {
 
@@ -53,18 +51,18 @@ class MainView : View("Graph") {
                     item("Facebook").action { println("Connecting Facebook!") }
                     item("Twitter").action { println("Connecting Twitter!") }
                 }
-                item("Save","Shortcut+S").action {
+                item("Save", "Shortcut+S").action {
                     println("Saving!")
                 }
-                item("Quit","Shortcut+Q").action {
+                item("Quit", "Shortcut+Q").action {
                     println("Quitting!")
                 }
             }
             menu("Edit") {
-                item("Copy","Shortcut+C").action {
+                item("Copy", "Shortcut+C").action {
                     println("Copying!")
                 }
-                item("Paste","Shortcut+V").action {
+                item("Paste", "Shortcut+V").action {
                     println("Pasting!")
                 }
             }
@@ -200,7 +198,7 @@ class MainView : View("Graph") {
 
             separator(Orientation.VERTICAL)
 
-            a = pane() {
+            a = pane {
                 graph?.let { add(it) }
             }
 
@@ -213,7 +211,6 @@ class MainView : View("Graph") {
             a.setOnMouseExited { e -> e?.let { scroller.exited(it) } }
         }
     }
-
 
 
 //    a.setOnScroll(new EventHandler<ScrollEvent>() {
@@ -251,7 +248,7 @@ class MainView : View("Graph") {
         val graphForceAtlas2 = makeLayout2(path, a)
 //        makeLayout2(path, a)
         for (z in 0 until graph!!.vertices().size) {
-            var n = graphForceAtlas2.nodes.drop(z).first()
+            val n = graphForceAtlas2.nodes.drop(z).first()
             for (y in graph!!.vertices.values) {
                 if (y.vertex == n.id.toString()) {
                     y.position = Pair((n.x().toDouble() + 30) * 5, (-(n.y().toDouble() + 30) * 5) + 500)
@@ -263,7 +260,7 @@ class MainView : View("Graph") {
 
     fun draw(graphForceAtlas2: Graph, a: StackPane) {
         for (z in 0 until graph!!.vertices().size) {
-            var n = graphForceAtlas2.nodes.drop(z).first()
+            val n = graphForceAtlas2.nodes.drop(z).first()
             for (y in graph!!.vertices.values) {
                 if (y.vertex == n.id.toString()) {
                     y.position = Pair((n.x().toDouble() + 30) * 5, (-(n.y().toDouble() + 30) * 5) + 500)
@@ -297,7 +294,7 @@ class MainView : View("Graph") {
             if (boolDirect) {
                 graphBeetwCent1 = BetweennessCenralityWeightedDirected()
                 valueCentralities =
-                    graphBeetwCent1.BetweennessCentralityScoreDirected(
+                    graphBeetwCent1.betweennessCentralityScoreDirected(
                         distinctVertex,
                         sourceVertex,
                         targetVertex,
@@ -306,7 +303,7 @@ class MainView : View("Graph") {
             } else {
                 graphBeetwCent2 = BetweennessCenralityWeightedUnidirected()
                 valueCentralities =
-                    graphBeetwCent2.BetweennessCentralityScoreUndirected(
+                    graphBeetwCent2.betweennessCentralityScoreUndirected(
                         distinctVertex,
                         sourceVertex,
                         targetVertex,
@@ -380,7 +377,7 @@ class MainView : View("Graph") {
             }
         } catch (x: IOException) {
             x.printStackTrace()
-            System.exit(1)
+            exitProcess(1)
         }
     }
 
@@ -404,12 +401,12 @@ class MainView : View("Graph") {
         val startTime = System.currentTimeMillis()
         var i = 0
         var nsteps = countIterations
-        var targetChangePerNode = 0.0
+        val targetChangePerNode = 0.0
         var targetSteps = 0
-        var seed: Long? = null
-        var threadCount = Runtime.getRuntime().availableProcessors()
+        val seed: Long? = null
+        val threadCount = Runtime.getRuntime().availableProcessors()
         val formats: MutableSet<String?> = HashSet()
-        var coordsFile: File? = null
+        val coordsFile: File? = null
 //    var sourcePath: String
 //    if (randomGraph){
 //        sourcePath = "D:\\2сем\\javafxtornadofx2\\randomGraph.csv"
@@ -419,17 +416,17 @@ class MainView : View("Graph") {
         val file = File(sourcePath)
         if (!file.exists()) {
             System.err.println("$file not found.")
-            System.exit(1)
+            exitProcess(1)
         }
         val output = "myGraph"
 //        nsteps = 10000
         if (nsteps == 0 && targetChangePerNode == 0.0) {
             System.err.println("Either --nsteps or --targetChangePerNode must be set!")
-            System.exit(1)
+            exitProcess(1)
         }
         if (nsteps > 0 && targetChangePerNode > 0.0) {
             System.err.println("--nsteps and --targetChangePerNode are mutually exclusive!")
-            System.exit(1)
+            exitProcess(1)
         }
 
         formats.add("gexf")
@@ -464,9 +461,7 @@ class MainView : View("Graph") {
         val layout = ForceAtlas2(null)
         layout.setGraphModel(graphModel)
         val random = if (seed != null) java.util.Random(seed) else java.util.Random()
-        var num_nodes = 0
-        for (node in g.nodes) {
-            ++num_nodes
+        for ((numNodes, node) in g.nodes.withIndex()) {
             node.setX(((0.01 + random.nextDouble()) * 1000).toFloat() - 500)
             node.setY(((0.01 + random.nextDouble()) * 1000).toFloat() - 500)
         }
@@ -484,7 +479,7 @@ class MainView : View("Graph") {
                     break
                 }
             }
-            val header = Arrays.asList(*s.split(sep.toRegex()).toTypedArray())
+            val header = listOf(*s.split(sep.toRegex()).toTypedArray())
             val idIndex = header.indexOf("id")
             val xIndex = header.indexOf("x")
             val yIndex = header.indexOf("y")
@@ -501,16 +496,16 @@ class MainView : View("Graph") {
             }
             br.close()
         }
-        layout.setBarnesHutTheta(barnesHutTheta)
-        layout.setJitterTolerance(jitterTolerance)
-        layout.setLinLogMode(linLogMode)
-        layout.setScalingRatio(scalingRatio)
-        layout.setStrongGravityMode(strongGravityMode)
-        layout.setGravity(gravity)
-        layout.setOutboundAttractionDistribution(outboundAttractionDistribution)
-        layout.setThreadsCount(threadCount)
+        layout.barnesHutTheta = barnesHutTheta
+        layout.jitterTolerance = jitterTolerance
+        layout.isLinLogMode = linLogMode
+        layout.scalingRatio = scalingRatio
+        layout.isStrongGravityMode = strongGravityMode
+        layout.gravity = gravity
+        layout.isOutboundAttractionDistribution = outboundAttractionDistribution
+        layout.threadsCount = threadCount
         layout.initAlgo()
-        val _formats: Set<String?> = formats
+        //val _formats: Set<String?> = formats
         val _layout: Layout = layout
 //        val distanceWriter = if (nsteps > 0) PrintWriter(FileWriter("$output.distances.txt")) else null
 //        if (nsteps > 0) distanceWriter!!.print("step\tdistance\n")
@@ -534,7 +529,7 @@ class MainView : View("Graph") {
 //                distanceWriter.print("\n")
 //                distanceWriter.flush()
 
-                val percent = Math.floor(100 * (i + 1.0) / nsteps).toInt()
+                val percent = floor(100 * (i + 1.0) / nsteps).toInt()
                 if (percent != lastPercent) {
                     print("*")
                     lastPercent = percent

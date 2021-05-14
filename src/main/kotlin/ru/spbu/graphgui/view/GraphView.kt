@@ -1,10 +1,10 @@
-package view
+package ru.spbu.graphgui.view
 
+import javafx.scene.layout.Pane
+import javafx.scene.paint.Color
 import ru.spbu.graphgui.controller.VertexDragController
 import ru.spbu.graphgui.model.Edge
 import ru.spbu.graphgui.model.Graph
-import javafx.scene.layout.Pane
-import javafx.scene.paint.Color
 import tornadofx.add
 import tornadofx.find
 
@@ -25,6 +25,7 @@ class GraphView<V, E>(private val graph: Graph<V, E> = Graph()) : Pane() {
             EdgeView(it, first, second)
         }
     }
+
     fun vertices(): Collection<VertexView<V>> = vertices.values
     fun verticesKeys(): Collection<V> = vertices.keys
     fun edges(): Collection<EdgeView<E, V>> = edges.values
