@@ -26,10 +26,18 @@ import java.util.*
 import kotlin.collections.ArrayDeque
 import kotlin.collections.HashMap
 import controller.Scroller
+import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 
 var nn = 10000
 var nn2 = 30
+var barnesHutTheta = 1.2
+var jitterTolerance = 1.0
+var linLogMode = false
+var scalingRatio = 2.0
+var gravity = 1.0
+var strongGravityMode = false
+var outboundAttractionDistribution = false
 
 class MainView : View("Graph") {
     var randomGraph = false
@@ -38,9 +46,32 @@ class MainView : View("Graph") {
     var sourcePath: String = "empty"
     var targetPath: String = "empty"
     var graphCreate = false
-    override val root = borderpane() {
-        var a = pane()
-        left {
+    override val root = vbox {
+        separator(Orientation.HORIZONTAL)
+        menubar {
+            menu("File") {
+                menu("Connect") {
+                    item("Facebook").action { println("Connecting Facebook!") }
+                    item("Twitter").action { println("Connecting Twitter!") }
+                }
+                item("Save","Shortcut+S").action {
+                    println("Saving!")
+                }
+                item("Quit","Shortcut+Q").action {
+                    println("Quitting!")
+                }
+            }
+            menu("Edit") {
+                item("Copy","Shortcut+C").action {
+                    println("Copying!")
+                }
+                item("Paste","Shortcut+V").action {
+                    println("Pasting!")
+                }
+            }
+        }
+        hbox(10) {
+            var a = pane()
             vbox(10) {
                 checkbox("Show vertices labels", graphSetting.vertex.label) {
                     action {
@@ -123,6 +154,38 @@ class MainView : View("Graph") {
                         }
                     }
                 }
+
+
+
+                checkbox("strongGravityMode") {
+                    action {
+                        strongGravityMode = !strongGravityMode
+                    }
+                }
+                checkbox("LinLogMode") {
+                    action {
+                        linLogMode = !linLogMode
+                    }
+                }
+                hbox(5) {
+                    label("Gravity:")
+                    textfield("10000") {
+                        action {
+                            gravity = this.text.toDouble()
+                        }
+                    }
+                }
+                hbox(5) {
+                    label("BarnesHutTheta:")
+                    textfield("10000") {
+                        action {
+                            barnesHutTheta = this.text.toDouble()
+                        }
+                    }
+                }
+
+
+
                 button("Make layout") {
                     action {
                         if (graphCreate) {
@@ -135,20 +198,23 @@ class MainView : View("Graph") {
                     }
                 }
             }
-        }
-        center {
+
+            val sep = separator(Orientation.VERTICAL)
+
             a = pane() {
                 graph?.let { add(it) }
             }
+
+            val scroller = find(Scroller::class)
+            a.setOnScroll { e -> e?.let { scroller.scroll(it) } }
+            a.setOnMouseEntered { e -> e?.let { scroller.entered(it) } }
+            a.setOnMousePressed { e -> e?.let { scroller.pressed(it) } }
+            a.setOnMouseDragged { e -> e?.let { scroller.dragged(it) } }
+            a.setOnMouseReleased { e -> e?.let { scroller.released(it) } }
+            a.setOnMouseExited { e -> e?.let { scroller.exited(it) } }
         }
-        val scroller = find(Scroller::class)
-        a.setOnScroll { e -> e?.let { scroller.scroll(it) } }
-        a.setOnMouseEntered { e -> e?.let { scroller.entered(it) } }
-        a.setOnMousePressed { e -> e?.let { scroller.pressed(it) } }
-        a.setOnMouseDragged { e -> e?.let { scroller.dragged(it) } }
-        a.setOnMouseReleased { e -> e?.let { scroller.released(it) } }
-        a.setOnMouseExited { e -> e?.let { scroller.exited(it) } }
     }
+
 
 
 //    a.setOnScroll(new EventHandler<ScrollEvent>() {
@@ -343,13 +409,6 @@ class MainView : View("Graph") {
         var targetSteps = 0
         var seed: Long? = null
         var threadCount = Runtime.getRuntime().availableProcessors()
-        var barnesHutTheta: Double? = null
-        var jitterTolerance: Double? = null
-        var linLogMode: Boolean? = null
-        var scalingRatio: Double? = null
-        var strongGravityMode: Boolean? = null
-        var gravity: Double? = null
-        var outboundAttractionDistribution: Boolean? = null
         val formats: MutableSet<String?> = HashSet()
         var coordsFile: File? = null
 //    var sourcePath: String
@@ -374,13 +433,6 @@ class MainView : View("Graph") {
             System.exit(1)
         }
 
-        barnesHutTheta = 1.2
-        jitterTolerance = 1.0
-        linLogMode = false
-        scalingRatio = 2.0
-        gravity = 1.0
-        strongGravityMode = false
-        outboundAttractionDistribution = false
         formats.add("gexf")
         formats.add("csv")
 //    if (getArg("coords") != null) {
