@@ -2,6 +2,7 @@ package view
 
 import centrality.BetweennessCenralityWeightedDirected
 import centrality.BetweennessCenralityWeightedUnidirected
+import javafx.scene.layout.BorderPane
 //import java.util.*
 import javafx.scene.paint.Color
 //import jdk.internal.misc.Signal.handle
@@ -24,119 +25,109 @@ import java.io.*
 import java.util.*
 import kotlin.collections.ArrayDeque
 import kotlin.collections.HashMap
+import controller.Scroller
+import javafx.scene.layout.Pane
 
-class MainView : View("Model.Graph.Model.Graph visualizer") {
+class MainView : View("Graph.Graph visualizer") {
     var randomGraph = false
     var graph: GraphView<String, Double>? = null
     var boolDirect = true
     var sourcePath: String = "empty"
     var targetPath: String = "empty"
     var graphCreate = false
-    override var root = hbox(10) {
-        var a = stackpane()
-        vbox(10) {
-            checkbox("Show vertices labels", graphSetting.vertex.label) {
-                action {
-                    println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
-                }
-            }
-            checkbox("Show edges labels", graphSetting.edge.label) {
-                action {
-                    println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
-                }
-            }
-            button("Calculate Betweenness Centrality") {
-                action {
-                    calculateBetweennessCentrality()
-                }
-            }
-            button {
-                this.text("DIRECTED (CLICK TO CHANGE)")
-                action {
-                    boolDirect = if (boolDirect) {
-                        this.text("UNDIRECTED (CLICK TO CHANGE)")
-                        false
-                    } else {
-                        this.text("DIRECTED (CLICK TO CHANGE)")
-                        true
+    override val root = borderpane() {
+        var a = pane()
+        left {
+            vbox(10) {
+                checkbox("Show vertices labels", graphSetting.vertex.label) {
+                    action {
+                        println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
                     }
                 }
-            }
-            textfield {
-                action {
-                    targetPath = this.text
-                    targetPath.replace("\\", "\\\\")
-                }
-            }
-            button("Create random graph\n (please specify the target path in field\n and press ENTER)") {
-                action {
-                    if (targetPath == "empty") {
-                        targetPath = "randomGraph.csv"
+                checkbox("Show edges labels", graphSetting.edge.label) {
+                    action {
+                        println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
                     }
-                    graph = GraphView(graphSetting.createRandomGraph(targetPath))
-                    graphCreate = true
-                    randomGraph = true
-                    a.clear()
-                    a.apply { add(graph!!) }
-                    drawRandomGraph()
                 }
-            }
-            textfield {
-                action {
-                    sourcePath = this.text
-                    sourcePath.replace("\\", "\\\\")
+                button("Calculate Betweenness Centrality") {
+                    action {
+                        calculateBetweennessCentrality()
+                    }
                 }
-            }
-            button("Create graph from .csv file\n (please specify the source path in field\n and press ENTER)") {
-                action {
+                button {
+                    this.text("DIRECTED (CLICK TO CHANGE)")
+                    action {
+                        boolDirect = if (boolDirect) {
+                            this.text("UNDIRECTED (CLICK TO CHANGE)")
+                            false
+                        } else {
+                            this.text("DIRECTED (CLICK TO CHANGE)")
+                            true
+                        }
+                    }
+                }
+                textfield {
+                    action {
+                        val intermediatePath = this.text
+                        for (letter in targetPath) {
+
+                        }
+                    }
+                }
+                button("Create random graph\n (please specify the target path in field\n and press ENTER)") {
+                    action {
+                        if (targetPath == "empty") {
+                            targetPath = "randomGraph.csv"
+                        }
+                        graph = GraphView(graphSetting.createRandomGraph(targetPath))
+                        graphCreate = true
+                        randomGraph = true
+                        a.clear()
+                        a.apply { add(graph!!) }
+                        drawRandomGraph()
+                    }
+                }
+                textfield {
+                    action {
+                        sourcePath = this.text
+                    }
+                }
+                button("Create graph from .csv file\n (please specify the source path in field\n and press ENTER)") {
+                    action {
 //                    C:\\Users\\kuval\\Downloads\\test.csv
 //                    println(sourcePath)
-                    graph = GraphView(graphSetting.readGraph(sourcePath))
-                    graphCreate = true
-                    randomGraph = false
-                    a.clear()
-                    a.apply { add(graph!!) }
-                    drawRandomGraph()
+                        graph = GraphView(graphSetting.readGraph(sourcePath))
+                        graphCreate = true
+                        randomGraph = false
+                        a.clear()
+                        a.apply { add(graph!!) }
+                        drawRandomGraph()
+                    }
                 }
-            }
-            button("Make layout") {
-                action {
-                    if (graphCreate) {
-                        if (randomGraph) {
-                            makeLayout(targetPath, a)
-                        } else {
-                            makeLayout(sourcePath, a)
+                button("Make layout") {
+                    action {
+                        if (graphCreate) {
+                            if (randomGraph) {
+                                makeLayout(targetPath, a)
+                            } else {
+                                makeLayout(sourcePath, a)
+                            }
                         }
                     }
                 }
             }
         }
-        a = stackpane() {
-            graph?.let { add(it) }
-
-//                a.onScroll(EventHandler<ScrollEvent>() {
-//                    fun handle(event: ActionEvent) {
-//                        event.consume()
-//
-//                        if (event.deltaY == 0.0) {
-//                            return
-//                        }
-//
-//                        var scaleFactor: Double = 0.0
-//                        if (event.deltaY > 0) {
-//                            scaleFactor = 1.1
-//                        } else {
-//                            scaleFactor = 1 / 1.1
-//                        }
-//                        a.scaleX = a.scaleX * scaleFactor
-//                        a.scaleY = a.scaleY * scaleFactor
-//                    }
-////                a.scaleX
-////                a.scaleXProperty()
-//                    )
-//                };
-
+        center {
+            a = pane() {
+                graph?.let { add(it) }
+            }
         }
+        val scroller = find(Scroller::class)
+        a.setOnScroll { e -> e?.let { scroller.scroll(it) } }
+        a.setOnMouseEntered { e -> e?.let { scroller.entered(it) } }
+        a.setOnMouseDragged { e -> e?.let { scroller.dragged(it) } }
+        a.setOnMouseReleased { e -> e?.let { scroller.released(it) } }
+        a.setOnMouseExited { e -> e?.let { scroller.exited(it) } }
     }
 
 
@@ -170,7 +161,7 @@ class MainView : View("Model.Graph.Model.Graph visualizer") {
         }
     }
 
-    fun makeLayout(path: String, a: StackPane) {
+    fun makeLayout(path: String, a: Pane) {
 //        Scene.processMouseEvent()
         val graphForceAtlas2 = makeLayout2(path, a)
 //        makeLayout2(path, a)
@@ -210,9 +201,6 @@ class MainView : View("Model.Graph.Model.Graph visualizer") {
             val edgeWeight = ArrayDeque<Double>()
             for (i in graph!!.verticesKeys()) {
                 distinctVertex.addLast(i)
-            }
-            for (i in graph!!.vertices()) {
-                println(i)
             }
             for (i in graph!!.edgesVertex()) {
                 sourceVertex.addLast(i.vertices.first)
@@ -326,7 +314,7 @@ class MainView : View("Model.Graph.Model.Graph visualizer") {
 //    return a?.value
 //}
 
-    fun makeLayout2(sourcePath: String, a: StackPane): Graph {
+    fun makeLayout2(sourcePath: String, a: Pane): Graph {
 
         val startTime = System.currentTimeMillis()
         var i = 0
