@@ -81,7 +81,7 @@ object graphSetting {
 
         for (line in lines.drop(1)) {
             val array = line.split(",")
-            println(array)
+//            println(array)
             addEdge(array[0], array[1], array[6].toDouble())
         }
     }
