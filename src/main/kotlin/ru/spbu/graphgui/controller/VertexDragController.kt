@@ -1,4 +1,4 @@
-package controller
+package ru.spbu.graphgui.controller
 import view.VertexView
 import javafx.scene.Cursor
 import javafx.scene.input.MouseEvent

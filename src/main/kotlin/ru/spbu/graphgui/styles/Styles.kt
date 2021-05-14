@@ -1,4 +1,4 @@
-package styles
+package ru.spbu.graphgui.styles
 import tornadofx.Stylesheet
 import tornadofx.loadFont
 import tornadofx.px

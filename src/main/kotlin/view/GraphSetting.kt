@@ -1,6 +1,6 @@
 package view
 
-import model.Graph
+import ru.spbu.graphgui.model.Graph
 import tornadofx.booleanProperty
 import tornadofx.doubleProperty
 import java.io.File

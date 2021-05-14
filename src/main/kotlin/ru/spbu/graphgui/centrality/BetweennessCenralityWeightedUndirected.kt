@@ -1,4 +1,4 @@
-package centrality
+package ru.spbu.graphgui.centrality
 
 import edu.uci.ics.jung.algorithms.scoring.BetweennessCentrality
 import edu.uci.ics.jung.graph.Graph

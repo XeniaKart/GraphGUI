@@ -1,4 +1,4 @@
-package controller
+package ru.spbu.graphgui.controller
 import javafx.scene.Cursor
 import javafx.scene.Node
 import tornadofx.Controller

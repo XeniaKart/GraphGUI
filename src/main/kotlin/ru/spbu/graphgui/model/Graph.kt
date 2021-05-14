@@ -1,4 +1,4 @@
-package model
+package ru.spbu.graphgui.model
 class Graph<V, E> {
     private val vertices = hashMapOf<V, V>()
     private val edges = hashMapOf<Pair<V, V>, Edge<E, V>>()

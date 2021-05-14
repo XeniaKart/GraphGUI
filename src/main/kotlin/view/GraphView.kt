@@ -1,8 +1,8 @@
 package view
 
-import controller.VertexDragController
-import model.Edge
-import model.Graph
+import ru.spbu.graphgui.controller.VertexDragController
+import ru.spbu.graphgui.model.Edge
+import ru.spbu.graphgui.model.Graph
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import tornadofx.add

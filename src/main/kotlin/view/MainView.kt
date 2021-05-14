@@ -1,8 +1,7 @@
 package view
 
-import centrality.BetweennessCenralityWeightedDirected
-import centrality.BetweennessCenralityWeightedUnidirected
-import javafx.scene.layout.BorderPane
+import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
+import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
 //import java.util.*
 import javafx.scene.paint.Color
 //import jdk.internal.misc.Signal.handle
@@ -25,7 +24,7 @@ import java.io.*
 import java.util.*
 import kotlin.collections.ArrayDeque
 import kotlin.collections.HashMap
-import controller.Scroller
+import ru.spbu.graphgui.controller.Scroller
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 

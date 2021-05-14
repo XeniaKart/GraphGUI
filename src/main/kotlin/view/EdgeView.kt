@@ -1,5 +1,5 @@
 package view
-import model.Edge
+import ru.spbu.graphgui.model.Edge
 import javafx.scene.shape.Line
 import tornadofx.text
 

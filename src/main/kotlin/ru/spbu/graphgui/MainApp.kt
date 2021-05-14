@@ -1,5 +1,7 @@
+package ru.spbu.graphgui
+
 import javafx.stage.Stage
-import styles.Styles
+import ru.spbu.graphgui.styles.Styles
 import tornadofx.App
 import tornadofx.launch
 import view.MainView
