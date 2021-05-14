@@ -6,8 +6,6 @@ import view.MainView
 
 class MainApp : App(MainView:: class, Styles::class) {
     override fun start(stage: Stage) {
-//        val btn = Button()
-//        btn.text="hello"
         stage.width = 800.0
         stage.height = 800.0
 

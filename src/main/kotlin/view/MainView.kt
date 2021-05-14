@@ -343,7 +343,7 @@ class MainView : View("Graph.Graph visualizer") {
             System.err.println("$file not found.")
             System.exit(1)
         }
-        val output = "D:\\2сем\\javafxtornadofx2\\myGraph"
+        val output = "myGraph"
         nsteps = 10000
         if (nsteps == 0 && targetChangePerNode == 0.0) {
             System.err.println("Either --nsteps or --targetChangePerNode must be set!")
