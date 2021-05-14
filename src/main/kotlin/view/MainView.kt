@@ -85,7 +85,7 @@ class MainView : View("Graph") {
                         }
                     }
                 }
-                button("Create random graph\n (please specify the target path in field\n and press ENTER)") {
+                button("Create random graph\n enter the path if you want to\n save to a specific folder") {
                     action {
                         if (targetPath == "empty") {
                             targetPath = "randomGraph.csv"
