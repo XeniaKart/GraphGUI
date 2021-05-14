@@ -66,9 +66,9 @@ class BetweennessCenralityWeightedDirected {
 
         for (i in graphNodesOnly.indices) {
             valueCentralities[graphNodesOnly[i].id] = BC1.getVertexScore(graphNodesOnly[i]) ?: 0.0
-            println(
-                "Model.Graph.Model.Graph Node " + graphNodesOnly[i] + " Betweenness Centrality " + valueCentralities[graphNodesOnly[i].id]
-            )
+//            println(
+//                "Model.Graph.Model.Graph Node " + graphNodesOnly[i] + " Betweenness Centrality " + valueCentralities[graphNodesOnly[i].id]
+//            )
         }
         return valueCentralities
     }
