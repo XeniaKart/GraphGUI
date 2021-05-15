@@ -2,10 +2,13 @@ package ru.spbu.graphgui.view
 
 //import java.util.*
 //import jdk.internal.misc.Signal.handle
+
 import javafx.geometry.Orientation
 import javafx.scene.layout.Pane
 import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
+import javafx.stage.DirectoryChooser
+import javafx.stage.FileChooser
 import org.gephi.graph.api.Graph
 import org.gephi.graph.api.GraphController
 import org.gephi.graph.api.Node
@@ -22,12 +25,15 @@ import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
 import ru.spbu.graphgui.controller.Scroller
 import tornadofx.*
 import java.io.*
+import java.util.*
+import kotlin.collections.ArrayDeque
+import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
-class MainView : View("Graph") {
 
+class MainView : View("Graph") {
     var countIterations = 10000
     var countNodes = 30
     var barnesHutTheta = 1.2
@@ -44,6 +50,7 @@ class MainView : View("Graph") {
     var targetPath: String = "empty"
     var graphCreate = false
     override val root = vbox {
+        var a = pane()
         separator(Orientation.HORIZONTAL)
         menubar {
             menu("File") {
@@ -52,10 +59,16 @@ class MainView : View("Graph") {
                     item("Twitter").action { println("Connecting Twitter!") }
                 }
                 item("Save", "Shortcut+S").action {
-                    println("Saving!")
+                    saveFilePC()
                 }
                 item("Quit", "Shortcut+Q").action {
                     println("Quitting!")
+                }
+                item("Open file").action {
+                    chooseFilePC()
+                    a.clear()
+                    a.apply { add(graph!!) }
+                    drawRandomGraph()
                 }
             }
             menu("Edit") {
@@ -68,7 +81,6 @@ class MainView : View("Graph") {
             }
         }
         hbox(10) {
-            var a = pane()
             vbox(10) {
                 checkbox("Show vertices labels", graphSetting.vertex.label) {
                     action {
@@ -105,39 +117,13 @@ class MainView : View("Graph") {
                         }
                     }
                 }
-                textfield {
+                button("Create random graph") {
                     action {
-                        val intermediatePath = this.text
-                        for (letter in targetPath) {
-
-                        }
-                    }
-                }
-                button("Create random graph\n enter the path if you want to\n save to a specific folder") {
-                    action {
-                        if (targetPath == "empty") {
-                            targetPath = "randomGraph.csv"
-                        }
-                        graph = GraphView(graphSetting.createRandomGraph(targetPath, countNodes))
+                        targetPath = "randomGraph.csv"
+                        graph = GraphView(graphSetting.createRandomGraph(countNodes))
+                        csvSave(targetPath)
                         graphCreate = true
                         randomGraph = true
-                        a.clear()
-                        a.apply { add(graph!!) }
-                        drawRandomGraph()
-                    }
-                }
-                textfield {
-                    action {
-                        sourcePath = this.text
-                    }
-                }
-                button("Create graph from .csv file\n (please specify the source path in field\n and press ENTER)") {
-                    action {
-//                    C:\\Users\\kuval\\Downloads\\test.csv
-//                    println(sourcePath)
-                        graph = GraphView(graphSetting.readGraph(sourcePath))
-                        graphCreate = true
-                        randomGraph = false
                         a.clear()
                         a.apply { add(graph!!) }
                         drawRandomGraph()
@@ -151,9 +137,6 @@ class MainView : View("Graph") {
                         }
                     }
                 }
-
-
-
                 checkbox("strongGravityMode") {
                     action {
                         strongGravityMode = !strongGravityMode
@@ -180,9 +163,6 @@ class MainView : View("Graph") {
                         }
                     }
                 }
-
-
-
                 button("Make layout") {
                     action {
                         if (graphCreate) {
@@ -212,30 +192,48 @@ class MainView : View("Graph") {
         }
     }
 
+    fun chooseFilePC() {
+        val fileChooser = FileChooser()
+        fileChooser.title = "Выбрать файл";
+        fileChooser.extensionFilters.addAll(FileChooser.ExtensionFilter("CSV", "*.csv"))
+        val file = fileChooser.showOpenDialog(primaryStage)
+        if (file != null) {
+            sourcePath = file.absolutePath
+            println(sourcePath)
+        }
+        graph = GraphView(graphSetting.readGraph(sourcePath))
+        graphCreate = true
+        randomGraph = false
+    }
 
-//    a.setOnScroll(new EventHandler<ScrollEvent>() {
-//        @Override public void handle(ScrollEvent event) {
-//            event.consume();
-//
-//            if (event.getDeltaY() == 0) {
-//                return;
-//            }
-//
-//            double scaleFactor =
-//            (event.getDeltaY() > 0)
-//            ? SCALE_DELTA
-//            : 1/SCALE_DELTA;
-//
-//            group.setScaleX(group.getScaleX() * scaleFactor);
-//            group.setScaleY(group.getScaleY() * scaleFactor);
-//        }
-//    }
+    fun saveFilePC() {
+        val directoryChooser = DirectoryChooser()
+        directoryChooser.title = "Выбрать папку"
+        val dir = directoryChooser.showDialog(primaryStage)
+        if (dir != null) {
+            targetPath = dir.absolutePath
+            println(targetPath)
+        } else {
+            targetPath = "randomGraph.csv"
+        }
+        csvSave(targetPath)
+    }
 
-
-//    fun qwerty() {
-//        a.add(graph)
-//
-//    }
+    fun csvSave(targetPath: String) {
+        val writer = PrintWriter(targetPath)
+        writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
+        var count = 1
+        var first = ""
+        var second = ""
+        for (i in graph!!.edgesVertex()) {
+            first = i.vertices.first
+            second = i.vertices.second
+            writer.print("$first,$second,Undirected, $count,,,1\n")
+            count++
+        }
+        writer.flush()
+        writer.close()
+    }
 
     fun drawRandomGraph() {
         for (y in graph!!.vertices.values) {
@@ -244,9 +242,7 @@ class MainView : View("Graph") {
     }
 
     fun makeLayout(path: String, a: Pane) {
-//        Scene.processMouseEvent()
         val graphForceAtlas2 = makeLayout2(path, a)
-//        makeLayout2(path, a)
         for (z in 0 until graph!!.vertices().size) {
             val n = graphForceAtlas2.nodes.drop(z).first()
             for (y in graph!!.vertices.values) {
@@ -255,20 +251,6 @@ class MainView : View("Graph") {
                     break
                 }
             }
-        }
-    }
-
-    fun draw(graphForceAtlas2: Graph, a: StackPane) {
-        for (z in 0 until graph!!.vertices().size) {
-            val n = graphForceAtlas2.nodes.drop(z).first()
-            for (y in graph!!.vertices.values) {
-                if (y.vertex == n.id.toString()) {
-                    y.position = Pair((n.x().toDouble() + 30) * 5, (-(n.y().toDouble() + 30) * 5) + 500)
-                    break
-                }
-            }
-//            val group = Group(a)
-//            val scene = Scene(group)
         }
     }
 
@@ -286,6 +268,7 @@ class MainView : View("Graph") {
             }
             for (i in graph!!.edgesVertex()) {
                 sourceVertex.addLast(i.vertices.first)
+                println(i.vertices.first)
                 targetVertex.addLast(i.vertices.second)
             }
             for (i in graph!!.edgesVertex()) {

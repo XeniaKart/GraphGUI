@@ -22,32 +22,21 @@ object graphSetting {
         val label = booleanProperty()
     }
 
-    fun createRandomGraph(path: String, number: Int): Graph<String, Double> = Graph<String, Double>().apply {
-
-//        val file = File(path)
-        val writer = PrintWriter(path)
-        writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
-        var count = 0
+    fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
         for (i in (0..number)) {
-//            addVertex(i.toString())
             for (j in i + 1..number) {
                 val a = abs(Random.nextInt() % 6)
                 val b = abs(Random.nextInt() % 2)
                 val m = abs(Random.nextDouble())
                 if (a == 0) {
-                    count++
                     if (b == 0) {
                         addEdge(i.toString(), j.toString(), m)
-                        writer.print("$i,$j,Undirected,$count,,,1\n")
                     } else {
                         addEdge(j.toString(), i.toString(), m)
-                        writer.print("$j,$i,Undirected,$count,,,1\n")
                     }
                 }
             }
         }
-        writer.flush()
-        writer.close()
 
 //        addVertex("A")
 //        addVertex("B")
