@@ -12,7 +12,7 @@ class Styles : Stylesheet() {
     init {
         root {
             jbmono?.let { font = it }
-            fontSize = 12.px
+            fontSize = 14.px
         }
     }
 }

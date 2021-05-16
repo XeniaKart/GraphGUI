@@ -20,6 +20,7 @@ object graphSetting {
 
     object graph {
         val widthAndHeight = doubleProperty(65_536.0)
+        var probabilityOfCreationAnEdge = doubleProperty(0.5)
     }
 
     object edge {
@@ -28,9 +29,9 @@ object graphSetting {
     }
 
     fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
-        for (i in (0..number)) {
-            for (j in i + 1..number) {
-                val a = abs(Random.nextInt() % 6)
+        for (i in (0 until number)) {
+            for (j in i + 1 until number) {
+                val a = abs(Random.nextInt() % (1.0 / graph.probabilityOfCreationAnEdge.value)).toInt()
                 val b = abs(Random.nextInt() % 2)
                 val m = abs(Random.nextDouble())
                 if (a == 0) {

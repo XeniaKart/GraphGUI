@@ -19,7 +19,6 @@ import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
 import tornadofx.*
 import java.io.*
-import kotlin.concurrent.thread
 import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
@@ -29,16 +28,15 @@ import org.gephi.graph.api.Node as GephiNode
 class MainView : View("Graph") {
     private val numberOfIterationsProperty = intProperty(10000)
     private var numberOfIterations by numberOfIterationsProperty
-
-    //    private var progressvalueProperty = doubleProperty()
-//    private var progressvalue by progressvalueProperty
+    private var progressValueProperty = doubleProperty()
+    private var progressValue by progressValueProperty
 //    private var countNodesProperty = intProperty(30)
     private var countNodes = 30
     private var barnesHutThetaProperty = doubleProperty(1.2)
     private var gravityProperty = doubleProperty(1.0)
-    private var jitterTolerance = 1.0
+    private var jitterToleranceProperty = doubleProperty(1.0)
     private var linLogMode = false
-    private var scalingRatio = 2.0
+    private var scalingRatioProperty = doubleProperty(2.0)
     private var strongGravityMode = false
     private var outboundAttractionDistribution = false
     private var randomGraph = false
@@ -75,97 +73,121 @@ class MainView : View("Graph") {
             }
         }
         left = VBox(10.0).apply {
-            checkbox("Show vertices labels", graphSetting.vertex.label) {
-                action {
-                    println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
-                }
-            }
-            checkbox("Show edges labels", graphSetting.edge.label) {
-                action {
-                    println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
-                }
-            }
-            hbox(5) {
-                label("Radius of nodes")
-                textfield("6.0") {
-                    graphSetting.vertex.radius.bind(textProperty().doubleBinding() { it!!.toDouble() })
-                }
-            }
-            button("Calculate Betweenness Centrality") {
-                action {
-                    calculateBetweennessCentrality()
-                }
-            }
-            button {
-                tooltip("You can only enter numbers")
-                this.text("DIRECTED (CLICK TO CHANGE)")
-                action {
-                    if (boolDirect)
-                        this.text("UNDIRECTED (CLICK TO CHANGE)")
-                    else
-                        this.text("DIRECTED (CLICK TO CHANGE)")
-                    boolDirect = !boolDirect
-                }
-            }
-            hbox(5) {
-                label("Max count of nodes:")
-//                textfield("30") {
-//                    countNodesProperty.bind(textProperty().integerBinding { it!!.toInt() })
-//                }
-                textfield("30") {
-                    textProperty().addListener { _, old, new ->
-                        countNodes = setIntFromTextfield(new, old)
-                        if (countNodes != 0)
-                            textProperty().value = countNodes.toString()
+            tabpane {
+                tab("Settings") {
+                    isClosable = false
+                    vbox(5) {
+                        checkbox("Show vertices Id", graphSetting.vertex.label) {
+                            action {
+                                println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
+                            }
+                        }
+//                      checkbox("Show edges labels", graphSetting.edge.label) {
+//                          action {
+//                               println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
+//                          }
+//                      }
+                        borderpane {
+                            left = label("Radius of nodes")
+                            right = textfield("6.0") {
+                                graphSetting.vertex.radius.bind(textProperty().doubleBinding() { it!!.toDouble() })
+                            }
+                        }
+                        button {
+                            this.text("DIRECTED (CLICK TO CHANGE)")
+                            action {
+                                if (boolDirect)
+                                    this.text("UNDIRECTED (CLICK TO CHANGE)")
+                                else
+                                    this.text("DIRECTED (CLICK TO CHANGE)")
+                                boolDirect = !boolDirect
+                            }
+                        }
+                        borderpane {
+                            left = label("Max count of nodes")
+//                          textfield("30") {
+//                              countNodesProperty.bind(textProperty().integerBinding { it!!.toInt() })
+//                          }
+                            right = textfield("30") {
+                                textProperty().addListener { _, old, new ->
+                                    countNodes = setIntFromTextfield(new, old)
+                                    if (countNodes != 0)
+                                        textProperty().value = countNodes.toString()
+                                }
+                            }
+                        }
+                        borderpane {
+                            left = label("Probability of \nedge creation")
+                            right = textfield("0.5") {
+                                graphSetting.graph.probabilityOfCreationAnEdge.bind(textProperty().doubleBinding() { it!!.toDouble() })
+                            }
+                        }
+                        button("Create random graph") {
+                            action {
+//                                runAsync {
+                                    targetPath = "randomGraph.csv"
+                                    graph = GraphView(graphSetting.createRandomGraph(countNodes))
+                                    csvSave(targetPath)
+                                    graphCreate = true
+                                    randomGraph = true
+                                    drawRandomGraph()
+//                                } ui {}
+                            }
+                        }
                     }
                 }
-            }
-            button("Create random graph") {
-                action {
-                    targetPath = "randomGraph.csv"
-                    graph = GraphView(graphSetting.createRandomGraph(countNodes))
-                    csvSave(targetPath)
-                    graphCreate = true
-                    randomGraph = true
-                    drawRandomGraph()
-                }
-            }
-            hbox(5) {
-                label("Number of iteration:")
-                textfield("10000") {
-                    textProperty().addListener { _, old, new ->
-                        numberOfIterations = setIntFromTextfield(new, old)
-                        if (numberOfIterations != 0)
-                            textProperty().value = numberOfIterations.toString()
-                    }
+                tab("Layout") {
+                    isClosable = false
+                    vbox(5) {
+                        borderpane {
+                            left = label("Number of iteration")
+                            right = textfield("10000") {
+                                textProperty().addListener { _, old, new ->
+                                    numberOfIterations = setIntFromTextfield(new, old)
+                                    if (numberOfIterations != 0)
+                                        textProperty().value = numberOfIterations.toString()
+                                }
 //                    numberOfIterationsProperty.bind(textProperty().integerBinding { it!!.toInt() })
-                }
-            }
-            checkbox("strongGravityMode") {
-                action {
-                    strongGravityMode = !strongGravityMode
-                }
-            }
-            checkbox("LinLogMode") {
-                action {
-                    linLogMode = !linLogMode
-                }
-            }
-            hbox(5) {
-                label("Gravity:")
-                textfield("1.0") {
+                            }
+                        }
+                        checkbox("strongGravityMode") {
+                            action {
+                                strongGravityMode = !strongGravityMode
+                            }
+                        }
+                        checkbox("LinLogMode") {
+                            action {
+                                linLogMode = !linLogMode
+                            }
+                        }
+                        borderpane {
+                            left = label("Gravity")
+                            right = textfield("1.0") {
 //                    textProperty().addListener { _, old, new ->
 //                        gravity = setDoubleFromTextfield(new, old)
 //                        if (gravity != 0.0)
 //                            textProperty().value = gravity.toString()
 //                    }
-                    gravityProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                }
-            }
-            hbox(5) {
-                label("BarnesHutTheta:")
-                var intermediateVariable: Double
-                textfield("1.2") {
+                                gravityProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
+                            }
+
+                        }
+                        borderpane {
+                            left = label("Jitter tolerance")
+                            right = textfield("1.0") {
+                                jitterToleranceProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
+                            }
+                        }
+                        borderpane {
+                            left = label("Scaling ratio")
+                            right = textfield("2.0") {
+                                scalingRatioProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
+                            }
+                        }
+                        borderpane {
+                            left = label("Barnes hut theta")
+                            var intermediateVariable: Double
+                            right = textfield("1.2") {
 //                    textProperty().addListener { _, old, new ->
 //                        intermediateVariable = setDoubleFromTextfield(new, old)
 //                        if (intermediateVariable != 0.0 && intermediateVariable) {
@@ -173,25 +195,36 @@ class MainView : View("Graph") {
 //                            textProperty().value = intermediateVariable.toString()
 //                        }
 //                    }
-                    barnesHutThetaProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
+                                barnesHutThetaProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
+                            }
+                        }
+                        button("Make layout") {
+                            action {
+                                if (graphCreate) {
+                                    runAsync {
+                                        if (randomGraph) {
+                                            makeLayout(targetPath)
+                                        } else {
+                                            makeLayout(sourcePath)
+                                        }
+                                    } ui {}
+                                }
+                            }
+                        }
+                        progressbar(progressValueProperty) {
+                            progressValueProperty
+                        }
+                    }
                 }
-            }
-            button("Make layout") {
-                action {
-                    if (graphCreate) {
-                        if (randomGraph) {
-                            makeLayout(targetPath)
-                        } else {
-                            makeLayout(sourcePath)
+                tab("Highlighting") {
+                    isClosable = false
+                    button("Calculate Betweenness Centrality") {
+                        action {
+                            calculateBetweennessCentrality()
                         }
                     }
                 }
             }
-//            progressbar(progressvalueProperty) {
-//                thread {
-//                    progressvalueProperty
-//                }
-//            }
         }
     }
 
@@ -450,9 +483,9 @@ class MainView : View("Graph") {
             br.close()
         }
         layout.barnesHutTheta = barnesHutThetaProperty.value
-        layout.jitterTolerance = jitterTolerance
+        layout.jitterTolerance = jitterToleranceProperty.value
         layout.isLinLogMode = linLogMode
-        layout.scalingRatio = scalingRatio
+        layout.scalingRatio = scalingRatioProperty.value
         layout.isStrongGravityMode = strongGravityMode
         layout.gravity = gravityProperty.value
         layout.isOutboundAttractionDistribution = outboundAttractionDistribution
@@ -470,7 +503,7 @@ class MainView : View("Graph") {
             for (iteration in 0 until numberOfIterations) {
                 layout.goAlgo()
                 val percent = floor(100 * (iteration + 1.0) / numberOfIterations).toInt()
-//                progressvalue = percent / 100.0
+                progressValue = percent / 100.0
                 if (percent != lastPercent) {
                     print("*")
                     lastPercent = percent
