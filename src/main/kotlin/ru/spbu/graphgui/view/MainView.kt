@@ -1,5 +1,6 @@
 package ru.spbu.graphgui.view
 
+import javafx.geometry.Orientation
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ScrollPane
 import javafx.scene.layout.VBox
@@ -30,7 +31,8 @@ class MainView : View("Graph") {
     private var numberOfIterations by numberOfIterationsProperty
     private var progressValueProperty = doubleProperty()
     private var progressValue by progressValueProperty
-//    private var countNodesProperty = intProperty(30)
+
+    //    private var countNodesProperty = intProperty(30)
     private var countNodes = 30
     private var barnesHutThetaProperty = doubleProperty(1.2)
     private var gravityProperty = doubleProperty(1.0)
@@ -72,122 +74,127 @@ class MainView : View("Graph") {
                 }
             }
         }
-        left = VBox(10.0).apply {
-            tabpane {
-                tab("Settings") {
-                    isClosable = false
-                    vbox(5) {
-                        checkbox("Show vertices Id", graphSetting.vertex.label) {
-                            action {
-                                println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
-                            }
+        left = hbox {
+            vbox(10.0) {
+                vbox(5) {
+                    checkbox("Show vertices Id", graphSetting.vertex.label) {
+                        action {
+                            println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
                         }
+                    }
 //                      checkbox("Show edges labels", graphSetting.edge.label) {
 //                          action {
 //                               println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
 //                          }
 //                      }
-                        borderpane {
-                            left = label("Radius of nodes")
-                            right = textfield("6.0") {
-                                graphSetting.vertex.radius.bind(textProperty().doubleBinding() { it!!.toDouble() })
-                            }
+                    borderpane {
+                        left = label("Radius of nodes")
+                        right = textfield("6.0") {
+                            graphSetting.vertex.radius.bind(textProperty().doubleBinding() { it!!.toDouble() })
                         }
-                        button {
-                            this.text("DIRECTED (CLICK TO CHANGE)")
-                            action {
-                                if (boolDirect)
-                                    this.text("UNDIRECTED (CLICK TO CHANGE)")
-                                else
-                                    this.text("DIRECTED (CLICK TO CHANGE)")
-                                boolDirect = !boolDirect
-                            }
+                    }
+                    button {
+                        this.text("DIRECTED (CLICK TO CHANGE)")
+                        action {
+                            if (boolDirect)
+                                this.text("UNDIRECTED (CLICK TO CHANGE)")
+                            else
+                                this.text("DIRECTED (CLICK TO CHANGE)")
+                            boolDirect = !boolDirect
                         }
-                        borderpane {
-                            left = label("Max count of nodes")
+                    }
+                    borderpane {
+                        left = label("Max count of nodes")
 //                          textfield("30") {
 //                              countNodesProperty.bind(textProperty().integerBinding { it!!.toInt() })
 //                          }
-                            right = textfield("30") {
-                                textProperty().addListener { _, old, new ->
-                                    countNodes = setIntFromTextfield(new, old)
-                                    if (countNodes != 0)
-                                        textProperty().value = countNodes.toString()
+                        right = textfield("30") {
+                            textProperty().addListener { _, old, new ->
+                                countNodes = setIntFromTextfield(new, old)
+                                if (countNodes != 0)
+                                    textProperty().value = countNodes.toString()
+                            }
+                            focusedProperty().addListener { _, old, new ->
+                                if (!new) {
+                                    text = "cbcmrb";
                                 }
-                            }
-                        }
-                        borderpane {
-                            left = label("Probability of \nedge creation")
-                            right = textfield("0.5") {
-                                graphSetting.graph.probabilityOfCreationAnEdge.bind(textProperty().doubleBinding() { it!!.toDouble() })
-                            }
-                        }
-                        button("Create random graph") {
-                            action {
-//                                runAsync {
-                                    targetPath = "randomGraph.csv"
-                                    graph = GraphView(graphSetting.createRandomGraph(countNodes))
-                                    csvSave(targetPath)
-                                    graphCreate = true
-                                    randomGraph = true
-                                    drawRandomGraph()
-//                                } ui {}
                             }
                         }
                     }
-                }
-                tab("Layout") {
-                    isClosable = false
-                    vbox(5) {
-                        borderpane {
-                            left = label("Number of iteration")
-                            right = textfield("10000") {
-                                textProperty().addListener { _, old, new ->
-                                    numberOfIterations = setIntFromTextfield(new, old)
-                                    if (numberOfIterations != 0)
-                                        textProperty().value = numberOfIterations.toString()
-                                }
+                    borderpane {
+                        left = label("Probability of \nedge creation")
+                        right = textfield("0.5") {
+                            graphSetting.graph.probabilityOfCreationAnEdge.bind(textProperty().doubleBinding() { it!!.toDouble() })
+                        }
+                    }
+                    button("Create random graph") {
+                        action {
+//                                runAsync {
+                            targetPath = "randomGraph.csv"
+                            graph = GraphView(graphSetting.createRandomGraph(countNodes))
+                            csvSave(targetPath)
+                            graphCreate = true
+                            randomGraph = true
+                            drawRandomGraph()
+//                                } ui {}
+                        }
+                    }
+                    separator(Orientation.HORIZONTAL)
+                    button("Calculate Betweenness Centrality") {
+                        action {
+                            calculateBetweennessCentrality()
+                        }
+                    }
+                    separator(Orientation.HORIZONTAL)
+                    borderpane {
+                        left = label("Number of iteration")
+                        right = textfield("10000") {
+                            textProperty().addListener { _, old, new ->
+                                numberOfIterations = setIntFromTextfield(new, old)
+                                if (numberOfIterations != 0)
+                                    textProperty().value = numberOfIterations.toString()
+                            }
 //                    numberOfIterationsProperty.bind(textProperty().integerBinding { it!!.toInt() })
-                            }
                         }
-                        checkbox("strongGravityMode") {
-                            action {
-                                strongGravityMode = !strongGravityMode
-                            }
+                    }
+                    checkbox("strongGravityMode") {
+                        action {
+                            strongGravityMode = !strongGravityMode
                         }
-                        checkbox("LinLogMode") {
-                            action {
-                                linLogMode = !linLogMode
-                            }
+                    }
+                    checkbox("LinLogMode") {
+                        action {
+                            linLogMode = !linLogMode
                         }
-                        borderpane {
-                            left = label("Gravity")
-                            right = textfield("1.0") {
+                    }
+                    borderpane {
+                        left = label("Gravity")
+                        right = textfield("1.0") {
 //                    textProperty().addListener { _, old, new ->
 //                        gravity = setDoubleFromTextfield(new, old)
 //                        if (gravity != 0.0)
 //                            textProperty().value = gravity.toString()
 //                    }
-                                gravityProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                            }
+                            gravityProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
+                        }
 
+                    }
+                    borderpane {
+                        left = label("Jitter tolerance")
+                        right = textfield("1.0") {
+                            jitterToleranceProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
                         }
-                        borderpane {
-                            left = label("Jitter tolerance")
-                            right = textfield("1.0") {
-                                jitterToleranceProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                            }
+                    }
+                    borderpane {
+                        left = label("Scaling ratio")
+                        right = textfield("2.0") {
+                            scalingRatioProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
                         }
-                        borderpane {
-                            left = label("Scaling ratio")
-                            right = textfield("2.0") {
-                                scalingRatioProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                            }
-                        }
-                        borderpane {
-                            left = label("Barnes hut theta")
-                            var intermediateVariable: Double
-                            right = textfield("1.2") {
+                    }
+                    borderpane {
+                        left = label("Barnes hut theta")
+                        var intermediateVariable: Double
+                        right = textfield("1.2") {
 //                    textProperty().addListener { _, old, new ->
 //                        intermediateVariable = setDoubleFromTextfield(new, old)
 //                        if (intermediateVariable != 0.0 && intermediateVariable) {
@@ -195,37 +202,30 @@ class MainView : View("Graph") {
 //                            textProperty().value = intermediateVariable.toString()
 //                        }
 //                    }
-                                barnesHutThetaProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                            }
-                        }
-                        button("Make layout") {
-                            action {
-                                if (graphCreate) {
-                                    runAsync {
-                                        if (randomGraph) {
-                                            makeLayout(targetPath)
-                                        } else {
-                                            makeLayout(sourcePath)
-                                        }
-                                    } ui {}
-                                }
-                            }
-                        }
-                        progressbar(progressValueProperty) {
-                            progressValueProperty
+                            barnesHutThetaProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
                         }
                     }
-                }
-                tab("Highlighting") {
-                    isClosable = false
-                    button("Calculate Betweenness Centrality") {
+                    button("Make layout") {
                         action {
-                            calculateBetweennessCentrality()
+                            if (graphCreate) {
+                                runAsync {
+                                    if (randomGraph) {
+                                        makeLayout(targetPath)
+                                    } else {
+                                        makeLayout(sourcePath)
+                                    }
+                                } ui {}
+                            }
                         }
+                    }
+                    progressbar(progressValueProperty) {
+                        progressValueProperty
                     }
                 }
             }
+            separator(Orientation.VERTICAL)
         }
+//            separator(Orientation.VERTICAL)
     }
 
     private fun setIntFromTextfield(new: String, old: String): Int =
@@ -274,21 +274,15 @@ class MainView : View("Graph") {
         val writer = PrintWriter(targetPath)
         writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
         var count = 1
-        var first: String
-        var second: String
-        for (i in graph!!.edgesVertex()) {
-            first = i.vertices.first
-            second = i.vertices.second
-            writer.print("$first,$second,Undirected, $count,,,1\n")
-            count++
-        }
+        for (i in graph!!.edgesVertex())
+            writer.print("${i.vertices.first},${i.vertices.second},Undirected, ${count++},,,${i.element})\n")
         writer.flush()
         writer.close()
     }
 
     private fun drawRandomGraph() {
         for (y in graph!!.vertices.values) {
-            y.position = Pair(((Random.nextDouble() * 60)) * 5, (-((Random.nextDouble() * 60)) * 5))
+            y.position = Pair(Random.nextDouble() * 300, -Random.nextDouble() * 300)
         }
     }
 
