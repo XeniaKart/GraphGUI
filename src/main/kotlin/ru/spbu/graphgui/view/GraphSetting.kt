@@ -18,7 +18,12 @@ object graphSetting {
         val label = booleanProperty()
     }
 
+    object graph {
+        val widthAndHeight = doubleProperty(65_536.0)
+    }
+
     object edge {
+        val width =  doubleProperty(1.0)
         val label = booleanProperty()
     }
 

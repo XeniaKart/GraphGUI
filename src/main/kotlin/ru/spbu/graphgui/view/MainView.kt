@@ -19,6 +19,7 @@ import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
 import tornadofx.*
 import java.io.*
+import kotlin.concurrent.thread
 import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
@@ -28,6 +29,8 @@ import org.gephi.graph.api.Node as GephiNode
 class MainView : View("Graph") {
     private val numberOfIterationsProperty = intProperty()
     private var numberOfIterations by numberOfIterationsProperty
+//    private var progressvalueProperty = doubleProperty()
+//    private var progressvalue by progressvalueProperty
     private var countNodes = 30
     private var barnesHutTheta = 1.2
     private var jitterTolerance = 1.0
@@ -52,8 +55,8 @@ class MainView : View("Graph") {
                     isFitToWidth = true
                     hvalue = 0.5
                     vvalue = 0.5
-                    vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
-                    hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+//                    vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+//                    hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
 //                    addEventFilter(ScrollEvent.SCROLL) { event -> event.consume() }
                 }
             }
@@ -93,6 +96,12 @@ class MainView : View("Graph") {
             checkbox("Show edges labels", graphSetting.edge.label) {
                 action {
                     println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
+                }
+            }
+            hbox(5) {
+                label("Radius of nodes")
+                textfield("6.0") {
+                    graphSetting.vertex.radius.bind(textProperty().doubleBinding() { it!!.toDouble() })
                 }
             }
             button("Calculate Betweenness Centrality") {
@@ -173,6 +182,11 @@ class MainView : View("Graph") {
                     }
                 }
             }
+//            progressbar(progressvalueProperty) {
+//                thread {
+//                    progressvalueProperty
+//                }
+//            }
         }
     }
 
@@ -435,6 +449,7 @@ class MainView : View("Graph") {
             for (iteration in 0 until numberOfIterations) {
                 layout.goAlgo()
                 val percent = floor(100 * (iteration + 1.0) / numberOfIterations).toInt()
+//                progressvalue = percent / 100.0
                 if (percent != lastPercent) {
                     print("*")
                     lastPercent = percent

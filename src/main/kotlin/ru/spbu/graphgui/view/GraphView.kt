@@ -8,6 +8,7 @@ import ru.spbu.graphgui.controller.VertexDragController
 import ru.spbu.graphgui.model.Edge
 import ru.spbu.graphgui.model.Graph
 import tornadofx.add
+import tornadofx.doubleProperty
 import tornadofx.find
 import tornadofx.onChange
 
@@ -18,9 +19,9 @@ class GraphView<V, E>(private val graph: Graph<V, E> = Graph()) : Pane() {
         setOnScroll { e -> e?.let { scroller.scroll(it) } }
 //        scroll()
         widthProperty().onChange { println("Width=$it") }
-        heightProperty().onChange { println("Height=$it") }
-        minWidth = 65_536.0
-        minHeight = 65_536.0
+        heightProperty()
+        minWidth = graphSetting.graph.widthAndHeight.value
+        minHeight = graphSetting.graph.widthAndHeight.value
     }
 
     val vertices by lazy {
