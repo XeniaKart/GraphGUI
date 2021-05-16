@@ -27,16 +27,18 @@ import org.gephi.graph.api.Node as GephiNode
 
 
 class MainView : View("Graph") {
-    private val numberOfIterationsProperty = intProperty()
+    private val numberOfIterationsProperty = intProperty(10000)
     private var numberOfIterations by numberOfIterationsProperty
-//    private var progressvalueProperty = doubleProperty()
+
+    //    private var progressvalueProperty = doubleProperty()
 //    private var progressvalue by progressvalueProperty
+//    private var countNodesProperty = intProperty(30)
     private var countNodes = 30
-    private var barnesHutTheta = 1.2
+    private var barnesHutThetaProperty = doubleProperty(1.2)
+    private var gravityProperty = doubleProperty(1.0)
     private var jitterTolerance = 1.0
     private var linLogMode = false
     private var scalingRatio = 2.0
-    private var gravity = 1.0
     private var strongGravityMode = false
     private var outboundAttractionDistribution = false
     private var randomGraph = false
@@ -55,35 +57,20 @@ class MainView : View("Graph") {
                     isFitToWidth = true
                     hvalue = 0.5
                     vvalue = 0.5
-//                    vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
-//                    hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+                    vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+                    hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
 //                    addEventFilter(ScrollEvent.SCROLL) { event -> event.consume() }
                 }
             }
         })
         top = MenuBar().apply {
             menu("File") {
-                menu("Connect") {
-                    item("Facebook").action { println("Connecting Facebook!") }
-                    item("Twitter").action { println("Connecting Twitter!") }
-                }
                 item("Save", "Shortcut+S").action {
                     saveFilePC()
-                }
-                item("Quit", "Shortcut+Q").action {
-                    println("Quitting!")
                 }
                 item("Open file").action {
                     chooseFilePC()
                     drawRandomGraph()
-                }
-            }
-            menu("Edit") {
-                item("Copy", "Shortcut+C").action {
-                    println("Copying!")
-                }
-                item("Paste", "Shortcut+V").action {
-                    println("Pasting!")
                 }
             }
         }
@@ -110,22 +97,26 @@ class MainView : View("Graph") {
                 }
             }
             button {
+                tooltip("You can only enter numbers")
                 this.text("DIRECTED (CLICK TO CHANGE)")
                 action {
-                    boolDirect = if (boolDirect) {
+                    if (boolDirect)
                         this.text("UNDIRECTED (CLICK TO CHANGE)")
-                        false
-                    } else {
+                    else
                         this.text("DIRECTED (CLICK TO CHANGE)")
-                        true
-                    }
+                    boolDirect = !boolDirect
                 }
             }
             hbox(5) {
                 label("Max count of nodes:")
+//                textfield("30") {
+//                    countNodesProperty.bind(textProperty().integerBinding { it!!.toInt() })
+//                }
                 textfield("30") {
-                    action {
-                        countNodes = this.text.toInt()
+                    textProperty().addListener { _, old, new ->
+                        countNodes = setIntFromTextfield(new, old)
+                        if (countNodes != 0)
+                            textProperty().value = countNodes.toString()
                     }
                 }
             }
@@ -142,7 +133,12 @@ class MainView : View("Graph") {
             hbox(5) {
                 label("Number of iteration:")
                 textfield("10000") {
-                    numberOfIterationsProperty.bind(textProperty().integerBinding { it!!.toInt() })
+                    textProperty().addListener { _, old, new ->
+                        numberOfIterations = setIntFromTextfield(new, old)
+                        if (numberOfIterations != 0)
+                            textProperty().value = numberOfIterations.toString()
+                    }
+//                    numberOfIterationsProperty.bind(textProperty().integerBinding { it!!.toInt() })
                 }
             }
             checkbox("strongGravityMode") {
@@ -158,17 +154,26 @@ class MainView : View("Graph") {
             hbox(5) {
                 label("Gravity:")
                 textfield("1.0") {
-                    action {
-                        gravity = this.text.toDouble()
-                    }
+//                    textProperty().addListener { _, old, new ->
+//                        gravity = setDoubleFromTextfield(new, old)
+//                        if (gravity != 0.0)
+//                            textProperty().value = gravity.toString()
+//                    }
+                    gravityProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
                 }
             }
             hbox(5) {
                 label("BarnesHutTheta:")
-                textfield("1.0") {
-                    action {
-                        barnesHutTheta = this.text.toDouble()
-                    }
+                var intermediateVariable: Double
+                textfield("1.2") {
+//                    textProperty().addListener { _, old, new ->
+//                        intermediateVariable = setDoubleFromTextfield(new, old)
+//                        if (intermediateVariable != 0.0 && intermediateVariable) {
+//                            barnesHutTheta = intermediateVariable
+//                            textProperty().value = intermediateVariable.toString()
+//                        }
+//                    }
+                    barnesHutThetaProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
                 }
             }
             button("Make layout") {
@@ -189,6 +194,22 @@ class MainView : View("Graph") {
 //            }
         }
     }
+
+    private fun setIntFromTextfield(new: String, old: String): Int =
+        if (new.toIntOrNull() != null && new.isNotEmpty())
+            new.toInt()
+        else if (new.isEmpty())
+            0
+        else
+            old.toInt()
+
+//    private fun setDoubleFromTextfield(new: String, old: String): Double =
+//        if (new.toDoubleOrNull() != null && new.isNotEmpty())
+//            new.toDouble()
+//        else if (new.isEmpty())
+//            0.0
+//        else
+//            old.toDouble()
 
     private fun chooseFilePC() {
         val file = chooseFile(
@@ -428,12 +449,12 @@ class MainView : View("Graph") {
             }
             br.close()
         }
-        layout.barnesHutTheta = barnesHutTheta
+        layout.barnesHutTheta = barnesHutThetaProperty.value
         layout.jitterTolerance = jitterTolerance
         layout.isLinLogMode = linLogMode
         layout.scalingRatio = scalingRatio
         layout.isStrongGravityMode = strongGravityMode
-        layout.gravity = gravity
+        layout.gravity = gravityProperty.value
         layout.isOutboundAttractionDistribution = outboundAttractionDistribution
         layout.threadsCount = threadCount
         layout.initAlgo()

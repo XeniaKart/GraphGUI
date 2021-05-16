@@ -17,10 +17,10 @@ open class VertexView<V>(
     }
 
     var position: Pair<Double, Double>
-        get() = centerX - graphSetting.graph.widthAndHeight.value / 2.0 to centerY - graphSetting.graph.widthAndHeight.value / 2.0
+        get() = centerX - graphSetting.graph.widthAndHeight.value / 2 to centerY - graphSetting.graph.widthAndHeight.value / 2
         set(value) {
-            centerX = value.first + graphSetting.graph.widthAndHeight.value / 2.0
-            centerY = value.second + graphSetting.graph.widthAndHeight.value / 2.0
+            centerX = value.first + graphSetting.graph.widthAndHeight.value / 2
+            centerY = value.second + graphSetting.graph.widthAndHeight.value / 2
         }
 
     var color: Color

@@ -17,9 +17,8 @@ class GraphView<V, E>(private val graph: Graph<V, E> = Graph()) : Pane() {
     init {
         val scroller = find(Scroller::class)
         setOnScroll { e -> e?.let { scroller.scroll(it) } }
-//        scroll()
-        widthProperty().onChange { println("Width=$it") }
-        heightProperty()
+//        widthProperty().onChange { println("Width=$it") }
+//        heightProperty().onChange { println("Width=$it") }
         minWidth = graphSetting.graph.widthAndHeight.value
         minHeight = graphSetting.graph.widthAndHeight.value
     }
