@@ -39,7 +39,6 @@ object graphSetting {
         }
     }
 
-
     fun readGraph(file: File): Graph<String, Double> = Graph<String, Double>().apply {
         if (!file.exists()) {
             System.err.println("$file not found.")
@@ -52,5 +51,4 @@ object graphSetting {
             addEdge(array[0], array[1], array[6].toDouble())
         }
     }
-
 }

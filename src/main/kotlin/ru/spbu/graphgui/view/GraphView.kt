@@ -1,5 +1,6 @@
 package ru.spbu.graphgui.view
 
+import javafx.scene.input.ScrollEvent
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import ru.spbu.graphgui.controller.Scroller
@@ -12,22 +13,14 @@ import tornadofx.onChange
 
 class GraphView<V, E>(private val graph: Graph<V, E> = Graph()) : Pane() {
     private val dragger = find(VertexDragController::class)
-
     init {
         val scroller = find(Scroller::class)
         setOnScroll { e -> e?.let { scroller.scroll(it) } }
+//        scroll()
         widthProperty().onChange { println("Width=$it") }
         heightProperty().onChange { println("Height=$it") }
         minWidth = 65_536.0
         minHeight = 65_536.0
-//        minWidth = 500.0
-//        minHeight = 500.0
-
-        //setOnMouseEntered { e -> e?.let { scroller.entered(it) } }
-        //setOnMousePressed { e -> e?.let { scroller.pressed(it) } }
-        //setOnMouseDragged { e -> e?.let { scroller.dragged(it) } }
-        //setOnMouseReleased { e -> e?.let { scroller.released(it) } }
-        //setOnMouseExited { e -> e?.let { scroller.exited(it) } }
     }
 
     val vertices by lazy {
@@ -52,13 +45,15 @@ class GraphView<V, E>(private val graph: Graph<V, E> = Graph()) : Pane() {
     fun edgesVertex(): Collection<Edge<E, V>> = edges.keys
 
     init {
-        edges().forEach {
-            add(it)
-            add(it.label)
+        edges().forEach { edge ->
+            add(edge)
+            add(edge.label)
+            edge.setOnScroll { e -> e.consume() }
         }
         vertices().forEach { v ->
             add(v)
             add(v.label)
+            v.setOnScroll { e -> e.consume() }
             v.setOnMouseEntered { e -> e?.let { dragger.entered(it) } }
             v.setOnMousePressed { e -> e?.let { dragger.pressed(it) } }
             v.setOnMouseDragged { e -> e?.let { dragger.dragged(it) } }

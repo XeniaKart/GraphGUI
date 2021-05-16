@@ -1,16 +1,9 @@
 package ru.spbu.graphgui.view
 
-//import java.util.*
-//import jdk.internal.misc.Signal.handle
-
-import javafx.geometry.Pos
-import javafx.scene.Node
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ScrollPane
-import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import org.gephi.graph.api.Graph
 import org.gephi.graph.api.GraphController
@@ -26,31 +19,30 @@ import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
 import tornadofx.*
 import java.io.*
-import java.util.*
-import kotlin.collections.ArrayDeque
 import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
 import org.gephi.graph.api.Node as GephiNode
 
+
 class MainView : View("Graph") {
-    val numberOfIterationsProperty = intProperty()
-    val numberOfIterations by numberOfIterationsProperty
-    var countNodes = 30
-    var barnesHutTheta = 1.2
-    var jitterTolerance = 1.0
-    var linLogMode = false
-    var scalingRatio = 2.0
-    var gravity = 1.0
-    var strongGravityMode = false
-    var outboundAttractionDistribution = false
-    var randomGraph = false
-    var graphProperty = objectProperty<GraphView<String, Double>>()
-    var graph: GraphView<String, Double>? by graphProperty
-    var boolDirect = true
-    lateinit var sourcePath: String
-    lateinit var targetPath: String
-    var graphCreate = false
+    private val numberOfIterationsProperty = intProperty()
+    private var numberOfIterations by numberOfIterationsProperty
+    private var countNodes = 30
+    private var barnesHutTheta = 1.2
+    private var jitterTolerance = 1.0
+    private var linLogMode = false
+    private var scalingRatio = 2.0
+    private var gravity = 1.0
+    private var strongGravityMode = false
+    private var outboundAttractionDistribution = false
+    private var randomGraph = false
+    private var graphProperty = objectProperty<GraphView<String, Double>>()
+    private var graph: GraphView<String, Double>? by graphProperty
+    private var boolDirect = true
+    private lateinit var sourcePath: String
+    private lateinit var targetPath: String
+    private var graphCreate = false
     override val root = borderpane {
         centerProperty().bind(graphProperty.objectBinding { graph ->
             graph?.let {
@@ -62,6 +54,7 @@ class MainView : View("Graph") {
                     vvalue = 0.5
                     vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
                     hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+//                    addEventFilter(ScrollEvent.SCROLL) { event -> event.consume() }
                 }
             }
         })
@@ -173,9 +166,9 @@ class MainView : View("Graph") {
                 action {
                     if (graphCreate) {
                         if (randomGraph) {
-                            makeLayout(targetPath, center)
+                            makeLayout(targetPath)
                         } else {
-                            makeLayout(sourcePath, center)
+                            makeLayout(sourcePath)
                         }
                     }
                 }
@@ -183,7 +176,7 @@ class MainView : View("Graph") {
         }
     }
 
-    fun chooseFilePC() {
+    private fun chooseFilePC() {
         val file = chooseFile(
             "Выбрать файл",
             arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
@@ -197,7 +190,7 @@ class MainView : View("Graph") {
         randomGraph = false
     }
 
-    fun saveFilePC() {
+    private fun saveFilePC() {
         val file = chooseFile(
             "Выбрать файл",
             arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
@@ -209,12 +202,12 @@ class MainView : View("Graph") {
         csvSave(targetPath)
     }
 
-    fun csvSave(targetPath: String) {
+    private fun csvSave(targetPath: String) {
         val writer = PrintWriter(targetPath)
         writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
         var count = 1
-        var first = ""
-        var second = ""
+        var first: String
+        var second: String
         for (i in graph!!.edgesVertex()) {
             first = i.vertices.first
             second = i.vertices.second
@@ -225,14 +218,14 @@ class MainView : View("Graph") {
         writer.close()
     }
 
-    fun drawRandomGraph() {
+    private fun drawRandomGraph() {
         for (y in graph!!.vertices.values) {
-            y.position = Pair(((Random.nextDouble() * 60) + 30) * 5, (-((Random.nextDouble() * 60) + 30) * 5) + 500)
+            y.position = Pair(((Random.nextDouble() * 60)) * 5, (-((Random.nextDouble() * 60)) * 5))
         }
     }
 
-    fun makeLayout(path: String, a: Node) {
-        val graphForceAtlas2 = makeLayout2(path, a)
+    private fun makeLayout(path: String) {
+        val graphForceAtlas2 = makeLayout2(path)
         for (z: Int in 0 until graph!!.vertices().size) {
             val n: GephiNode = graphForceAtlas2.nodes.drop(z).first()
             for (y: VertexView<String> in graph!!.vertices.values) {
@@ -313,8 +306,6 @@ class MainView : View("Graph") {
         }
     }
 
-
-    //private val argsMap: MutableMap<String, Arg> = LinkedHashMap()
     private fun writeOutput(g: Graph, formats: Set<String?>, output: String?) {
         try {
             // ExporterCSV, ExporterDL, ExporterGDF, ExporterGEXF, ExporterGML, ExporterGraphML, ExporterPajek, ExporterVNA, PDFExporter, PNGExporter, SVGExporter
@@ -354,63 +345,25 @@ class MainView : View("Graph") {
         }
     }
 
-//private fun addArg(flag: String, description: String, not_boolean: Boolean, defaultValue: Any) {
-//    argsMap["--" + flag.toLowerCase()] =
-//        Arg(flag, description, not_boolean, "" + defaultValue)
-//}
-//
-//private fun addArg(flag: String, description: String, not_boolean: Boolean) {
-//    argsMap["--" + flag.toLowerCase()] =
-//        Arg(flag, description, not_boolean, null)
-//}
-//
-//private fun getArg(flag: String): String? {
-//    val a = argsMap["--" + flag.toLowerCase()]
-//    return a?.value
-//}
-
-    fun makeLayout2(sourcePath: String, a: Node): Graph {
+    private fun makeLayout2(sourcePath: String): Graph {
 
         val startTime = System.currentTimeMillis()
-        var i = 0
-        var nsteps = numberOfIterations
-        val targetChangePerNode = 0.0
-        var targetSteps = 0
         val seed: Long? = null
         val threadCount = Runtime.getRuntime().availableProcessors()
         val formats: MutableSet<String?> = HashSet()
         val coordsFile: File? = null
-//    var sourcePath: String
-//    if (randomGraph){
-//        sourcePath = "D:\\2сем\\javafxtornadofx2\\randomGraph.csv"
-//    }else{
-//        sourcePath = path
-//    }
         val file = File(sourcePath)
         if (!file.exists()) {
             System.err.println("$file not found.")
             exitProcess(1)
         }
         val output = "myGraph"
-//        nsteps = 10000
-        if (nsteps == 0 && targetChangePerNode == 0.0) {
-            System.err.println("Either --nsteps or --targetChangePerNode must be set!")
+        if (numberOfIterations <= 0) {
+            System.err.println("Number of iterations must be not positive!")
             exitProcess(1)
         }
-        if (nsteps > 0 && targetChangePerNode > 0.0) {
-            System.err.println("--nsteps and --targetChangePerNode are mutually exclusive!")
-            exitProcess(1)
-        }
-
         formats.add("gexf")
         formats.add("csv")
-//    if (getArg("coords") != null) {
-//        coordsFile = File(getArg("coords"))
-//        if (!coordsFile.exists()) {
-//            System.err.println("$coordsFile not found.")
-//            System.exit(1)
-//        }
-//    }
 //    TODO()
         if (formats.size == 0) {
             formats.add("txt")
@@ -423,18 +376,15 @@ class MainView : View("Graph") {
         )
         val graphModel = Lookup.getDefault().lookup(GraphController::class.java).graphModel
         val container = importController.importFile(file)
-        val g: Graph = if (/*!getArg("directed").equals("true", ignoreCase = */true) {
+        val g: Graph = run {
             container.loader.setEdgeDefault(EdgeDirectionDefault.UNDIRECTED)
             graphModel.undirectedGraph
-        } else {
-            container.loader.setEdgeDefault(EdgeDirectionDefault.DIRECTED)
-            graphModel.directedGraph
         }
         importController.process(container, DefaultProcessor(), workspace)
         val layout = ForceAtlas2(null)
         layout.setGraphModel(graphModel)
         val random = if (seed != null) java.util.Random(seed) else java.util.Random()
-        for ((numNodes, node) in g.nodes.withIndex()) {
+        for (node in g.nodes) {
             node.setX(((0.01 + random.nextDouble()) * 1000).toFloat() - 500)
             node.setY(((0.01 + random.nextDouble()) * 1000).toFloat() - 500)
         }
@@ -478,31 +428,18 @@ class MainView : View("Graph") {
         layout.isOutboundAttractionDistribution = outboundAttractionDistribution
         layout.threadsCount = threadCount
         layout.initAlgo()
-        //val _formats: Set<String?> = formats
-        val _layout: Layout = layout
-//        val distanceWriter = if (nsteps > 0) PrintWriter(FileWriter("$output.distances.txt")) else null
-//        if (nsteps > 0) distanceWriter!!.print("step\tdistance\n")
+        val layout1: Layout = layout
         val shutdownThread: Thread = object : Thread() {
             override fun run() {
-                _layout.endAlgo()
-//                writeOutput(g, _formats, output)
-//                distanceWriter?.close()
+                layout1.endAlgo()
             }
         }
         Runtime.getRuntime().addShutdownHook(shutdownThread)
-        if (nsteps > 0) {
+        if (numberOfIterations > 0) {
             var lastPercent = 0
-//            var distance: Double
-            for (i in 0 until nsteps) {
+            for (iteration in 0 until numberOfIterations) {
                 layout.goAlgo()
-//                distance = layout.distance
-//                distanceWriter!!.print(i)
-//                distanceWriter.print("\t")
-//                distanceWriter.print(distance)
-//                distanceWriter.print("\n")
-//                distanceWriter.flush()
-
-                val percent = floor(100 * (i + 1.0) / nsteps).toInt()
+                val percent = floor(100 * (iteration + 1.0) / numberOfIterations).toInt()
                 if (percent != lastPercent) {
                     print("*")
                     lastPercent = percent
@@ -510,26 +447,11 @@ class MainView : View("Graph") {
                         println("$percent%")
                     }
                 }
-//                if (i % 10 == 0) {
-////                    println ("debug")
-//                    draw(g, a)
-//                }
             }
-        } else {
-            nsteps = 0
-//            var changePerNode: Double
-//            do {
-//                ++nsteps
-//                layout.goAlgo()
-//                changePerNode = layout.getDistance() / num_nodes
-//                if (nsteps % 100 == 0) println("$nsteps iterations, change_per_node = $changePerNode")
-//            } while (nsteps == 1 || changePerNode > targetChangePerNode && nsteps < targetSteps)
-//            println("Finished in $nsteps iterations, change_per_node = $changePerNode")
         }
         Runtime.getRuntime().removeShutdownHook(shutdownThread)
         layout.endAlgo()
         writeOutput(g, formats, output)
-//        distanceWriter?.close()
         val endTime = System.currentTimeMillis()
         println("Time = " + (endTime - startTime) / 1000.0 + "s")
         return g

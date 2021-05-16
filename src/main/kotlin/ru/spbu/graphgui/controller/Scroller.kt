@@ -11,14 +11,16 @@ import tornadofx.success
 import java.lang.Thread.sleep
 
 class Scroller : Controller() {
-    var coordCursorPressedX = 0.0
-    var coordCursorPressedY = 0.0
+    var coordinateXOfCursorScrolled = 0.0
+    var coordinateYOfCursorScrolled = 0.0
     var coordinatePanelX = 0.0
     var coordinatePanelY = 0.0
+    fun BeatufulScroll() {
+        TODO("Write scroll relative to the coordinates")
+    }
     fun scroll(event: ScrollEvent) {
-        if (event.target !is Pane) {
+        if (event.target !is Pane)
             return
-        }
         event.consume()
         val panelWithGraph = check(event)
         if (event.deltaY > 0) {
@@ -42,49 +44,6 @@ class Scroller : Controller() {
             TODO("update graph")
             if (TODO("layoutNotCancelled")) layout()
         }
-    }
-
-    fun entered(event: MouseEvent) {
-        val panelWithGraph = check(event)
-        if (!event.isPrimaryButtonDown)
-            panelWithGraph.scene.cursor = Cursor.HAND
-    }
-
-    fun pressed(event: MouseEvent) {
-        val panelWithGraph = check(event)
-        if (!event.isPrimaryButtonDown)
-            return
-        panelWithGraph.scene.cursor = Cursor.CLOSED_HAND
-        event.consume()
-        coordCursorPressedX = event.x
-        coordCursorPressedY = event.y
-        coordinatePanelX = panelWithGraph.translateX
-        coordinatePanelY = panelWithGraph.translateY
-    }
-
-    fun dragged(event: MouseEvent) {
-        if (!event.isPrimaryButtonDown || event.target !is Pane)
-            return
-        val panelWithGraph = check(event)
-        panelWithGraph.translateX = coordinatePanelX + (event.x - coordCursorPressedX)
-        panelWithGraph.translateY = coordinatePanelY + (event.y - coordCursorPressedY)
-        event.consume()
-    }
-
-    fun released(event: MouseEvent) {
-        val v = check(event)
-        v.scene.cursor = Cursor.HAND
-        event.consume()
-    }
-
-    fun exited(event: MouseEvent) {
-        val v = check(event)
-        if (!event.isPrimaryButtonDown)
-            v.scene.cursor = Cursor.DEFAULT
-    }
-
-    private fun check(event: MouseEvent): Node {
-        return event.target as Node
     }
 
     private fun check(event: ScrollEvent): Pane {
