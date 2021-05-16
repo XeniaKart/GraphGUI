@@ -3,15 +3,17 @@ package ru.spbu.graphgui.view
 //import java.util.*
 //import jdk.internal.misc.Signal.handle
 
-import javafx.geometry.Orientation
-import javafx.scene.layout.Pane
-import javafx.scene.layout.StackPane
+import javafx.geometry.Pos
+import javafx.scene.Node
+import javafx.scene.control.MenuBar
+import javafx.scene.control.ScrollPane
+import javafx.scene.layout.HBox
+import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import org.gephi.graph.api.Graph
 import org.gephi.graph.api.GraphController
-import org.gephi.graph.api.Node
 import org.gephi.io.exporter.api.ExportController
 import org.gephi.io.importer.api.EdgeDirectionDefault
 import org.gephi.io.importer.api.ImportController
@@ -22,19 +24,18 @@ import org.gephi.project.api.ProjectController
 import org.openide.util.Lookup
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
-import ru.spbu.graphgui.controller.Scroller
 import tornadofx.*
 import java.io.*
 import java.util.*
 import kotlin.collections.ArrayDeque
-import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
-
+import org.gephi.graph.api.Node as GephiNode
 
 class MainView : View("Graph") {
-    var countIterations = 10000
+    val numberOfIterationsProperty = intProperty()
+    val numberOfIterations by numberOfIterationsProperty
     var countNodes = 30
     var barnesHutTheta = 1.2
     var jitterTolerance = 1.0
@@ -44,15 +45,27 @@ class MainView : View("Graph") {
     var strongGravityMode = false
     var outboundAttractionDistribution = false
     var randomGraph = false
-    var graph: GraphView<String, Double>? = null
+    var graphProperty = objectProperty<GraphView<String, Double>>()
+    var graph: GraphView<String, Double>? by graphProperty
     var boolDirect = true
     var sourcePath: String = "empty"
     var targetPath: String = "empty"
     var graphCreate = false
-    override val root = vbox {
-        var a = pane()
-        separator(Orientation.HORIZONTAL)
-        menubar {
+    override val root = borderpane {
+        centerProperty().bind(graphProperty.objectBinding { graph ->
+            graph?.let {
+                ScrollPane(it).apply {
+                    isPannable = true
+                    isFitToHeight = true
+                    isFitToWidth = true
+                    hvalue = 0.5
+                    vvalue = 0.5
+                    vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+                    hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
+                }
+            }
+        })
+        top = MenuBar().apply {
             menu("File") {
                 menu("Connect") {
                     item("Facebook").action { println("Connecting Facebook!") }
@@ -66,8 +79,6 @@ class MainView : View("Graph") {
                 }
                 item("Open file").action {
                     chooseFilePC()
-                    a.clear()
-                    a.apply { add(graph!!) }
                     drawRandomGraph()
                 }
             }
@@ -80,130 +91,118 @@ class MainView : View("Graph") {
                 }
             }
         }
-        hbox(10) {
-            vbox(10) {
-                checkbox("Show vertices labels", graphSetting.vertex.label) {
-                    action {
-                        println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
+        left = VBox(10.0).apply {
+            checkbox("Show vertices labels", graphSetting.vertex.label) {
+                action {
+                    println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
+                }
+            }
+            checkbox("Show edges labels", graphSetting.edge.label) {
+                action {
+                    println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
+                }
+            }
+            button("Calculate Betweenness Centrality") {
+                action {
+                    calculateBetweennessCentrality()
+                }
+            }
+            button {
+                this.text("DIRECTED (CLICK TO CHANGE)")
+                action {
+                    boolDirect = if (boolDirect) {
+                        this.text("UNDIRECTED (CLICK TO CHANGE)")
+                        false
+                    } else {
+                        this.text("DIRECTED (CLICK TO CHANGE)")
+                        true
                     }
                 }
-                checkbox("Show edges labels", graphSetting.edge.label) {
+            }
+            hbox(5) {
+                label("Max count of nodes:")
+                textfield("30") {
                     action {
-                        println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
+                        countNodes = this.text.toInt()
                     }
                 }
-                button("Calculate Betweenness Centrality") {
+            }
+            button("Create random graph") {
+                action {
+                    targetPath = "randomGraph.csv"
+                    graph = GraphView(graphSetting.createRandomGraph(countNodes))
+                    csvSave(targetPath)
+                    graphCreate = true
+                    randomGraph = true
+                    drawRandomGraph()
+                }
+            }
+            hbox(5) {
+                label("Number of iteration:")
+                textfield("10000") {
+                    numberOfIterationsProperty.bind(textProperty().integerBinding { it!!.toInt() })
+                }
+            }
+            checkbox("strongGravityMode") {
+                action {
+                    strongGravityMode = !strongGravityMode
+                }
+            }
+            checkbox("LinLogMode") {
+                action {
+                    linLogMode = !linLogMode
+                }
+            }
+            hbox(5) {
+                label("Gravity:")
+                textfield("1.0") {
                     action {
-                        calculateBetweennessCentrality()
+                        gravity = this.text.toDouble()
                     }
                 }
-                button {
-                    this.text("DIRECTED (CLICK TO CHANGE)")
+            }
+            hbox(5) {
+                label("BarnesHutTheta:")
+                textfield("1.0") {
                     action {
-                        boolDirect = if (boolDirect) {
-                            this.text("UNDIRECTED (CLICK TO CHANGE)")
-                            false
+                        barnesHutTheta = this.text.toDouble()
+                    }
+                }
+            }
+            button("Make layout") {
+                action {
+                    if (graphCreate) {
+                        if (randomGraph) {
+                            makeLayout(targetPath, center)
                         } else {
-                            this.text("DIRECTED (CLICK TO CHANGE)")
-                            true
-                        }
-                    }
-                }
-                hbox(5) {
-                    label("Max count of nodes:")
-                    textfield("30") {
-                        action {
-                            countNodes = this.text.toInt()
-                        }
-                    }
-                }
-                button("Create random graph") {
-                    action {
-                        targetPath = "randomGraph.csv"
-                        graph = GraphView(graphSetting.createRandomGraph(countNodes))
-                        csvSave(targetPath)
-                        graphCreate = true
-                        randomGraph = true
-                        a.clear()
-                        a.apply { add(graph!!) }
-                        drawRandomGraph()
-                    }
-                }
-                hbox(5) {
-                    label("Number of iteration:")
-                    textfield("10000") {
-                        action {
-                            countIterations = this.text.toInt()
-                        }
-                    }
-                }
-                checkbox("strongGravityMode") {
-                    action {
-                        strongGravityMode = !strongGravityMode
-                    }
-                }
-                checkbox("LinLogMode") {
-                    action {
-                        linLogMode = !linLogMode
-                    }
-                }
-                hbox(5) {
-                    label("Gravity:")
-                    textfield("1.0") {
-                        action {
-                            gravity = this.text.toDouble()
-                        }
-                    }
-                }
-                hbox(5) {
-                    label("BarnesHutTheta:")
-                    textfield("1.0") {
-                        action {
-                            barnesHutTheta = this.text.toDouble()
-                        }
-                    }
-                }
-                button("Make layout") {
-                    action {
-                        if (graphCreate) {
-                            if (randomGraph) {
-                                makeLayout(targetPath, a)
-                            } else {
-                                makeLayout(sourcePath, a)
-                            }
+                            makeLayout(sourcePath, center)
                         }
                     }
                 }
             }
-
-            separator(Orientation.VERTICAL)
-
-            a = pane {
-                graph?.let { add(it) }
-            }
-
-            val scroller = find(Scroller::class)
-            a.setOnScroll { e -> e?.let { scroller.scroll(it) } }
-            a.setOnMouseEntered { e -> e?.let { scroller.entered(it) } }
-            a.setOnMousePressed { e -> e?.let { scroller.pressed(it) } }
-            a.setOnMouseDragged { e -> e?.let { scroller.dragged(it) } }
-            a.setOnMouseReleased { e -> e?.let { scroller.released(it) } }
-            a.setOnMouseExited { e -> e?.let { scroller.exited(it) } }
         }
     }
 
     fun chooseFilePC() {
-        val fileChooser = FileChooser()
-        fileChooser.title = "Выбрать файл";
-        fileChooser.extensionFilters.addAll(FileChooser.ExtensionFilter("CSV", "*.csv"))
-        val file = fileChooser.showOpenDialog(primaryStage)
-        if (file != null) {
-            sourcePath = file.absolutePath
-            println(sourcePath)
-        }
-        graph = GraphView(graphSetting.readGraph(sourcePath))
-        graphCreate = true
-        randomGraph = false
+        val file = chooseFile(
+            "Выбрать файл",
+            arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
+            null,
+            FileChooserMode.Save,
+            currentWindow
+        )
+        println(file)
+//        val fileChooser = FileChooser()
+//        fileChooser.title = "Выбрать файл";
+//        fileChooser.extensionFilters.addAll(FileChooser.ExtensionFilter("CSV", "*.csv"))
+//        val file = fileChooser.showOpenDialog(primaryStage)
+//        if (file != null) {
+//            sourcePath = file.absolutePath
+//            println(sourcePath)
+//        }
+//        graph = GraphView(graphSetting.readGraph(sourcePath))
+//        graphCreate = true
+//        randomGraph = false
     }
 
     fun saveFilePC() {
@@ -241,13 +240,13 @@ class MainView : View("Graph") {
         }
     }
 
-    fun makeLayout(path: String, a: Pane) {
+    fun makeLayout(path: String, a: Node) {
         val graphForceAtlas2 = makeLayout2(path, a)
-        for (z in 0 until graph!!.vertices().size) {
-            val n = graphForceAtlas2.nodes.drop(z).first()
-            for (y in graph!!.vertices.values) {
+        for (z: Int in 0 until graph!!.vertices().size) {
+            val n: GephiNode = graphForceAtlas2.nodes.drop(z).first()
+            for (y: VertexView<String> in graph!!.vertices.values) {
                 if (y.vertex == n.id.toString()) {
-                    y.position = Pair((n.x().toDouble() + 30) * 5, (-(n.y().toDouble() + 30) * 5) + 500)
+                    y.position = Pair(n.x().toDouble(), n.y().toDouble())
                     break
                 }
             }
@@ -379,11 +378,11 @@ class MainView : View("Graph") {
 //    return a?.value
 //}
 
-    fun makeLayout2(sourcePath: String, a: Pane): Graph {
+    fun makeLayout2(sourcePath: String, a: Node): Graph {
 
         val startTime = System.currentTimeMillis()
         var i = 0
-        var nsteps = countIterations
+        var nsteps = numberOfIterations
         val targetChangePerNode = 0.0
         var targetSteps = 0
         val seed: Long? = null
@@ -449,7 +448,7 @@ class MainView : View("Graph") {
             node.setY(((0.01 + random.nextDouble()) * 1000).toFloat() - 500)
         }
         if (coordsFile != null) {
-            val idToNode: MutableMap<Any, Node> = java.util.HashMap()
+            val idToNode: MutableMap<Any, GephiNode> = java.util.HashMap()
             for (n in g.nodes) {
                 idToNode[n.id] = n
             }

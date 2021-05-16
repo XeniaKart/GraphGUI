@@ -17,10 +17,10 @@ open class VertexView<V>(
     }
 
     var position: Pair<Double, Double>
-        get() = centerX to centerY
+        get() = centerX - 32_768.0 to centerY - 32_768.0
         set(value) {
-            centerX = value.first
-            centerY = value.second
+            centerX = value.first + 32_768.0
+            centerY = value.second + 32_768.0
         }
 
     var color: Color

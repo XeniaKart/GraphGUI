@@ -6,6 +6,9 @@ import javafx.scene.input.MouseEvent
 import javafx.scene.input.ScrollEvent
 import javafx.scene.layout.Pane
 import tornadofx.Controller
+import tornadofx.runLater
+import tornadofx.success
+import java.lang.Thread.sleep
 
 class Scroller : Controller() {
     var coordCursorPressedX = 0.0
@@ -16,6 +19,7 @@ class Scroller : Controller() {
         if (event.target !is Pane) {
             return
         }
+        event.consume()
         val panelWithGraph = check(event)
         if (event.deltaY > 0) {
             panelWithGraph.scaleX *= event.deltaY / 30
@@ -24,7 +28,20 @@ class Scroller : Controller() {
             panelWithGraph.scaleX /= (-event.deltaY / 30)
             panelWithGraph.scaleY /= (-event.deltaY / 30)
         }
+        panelWithGraph.parent.parent.layout()
+    }
 
+    // how to do layout
+    fun layout() {
+        runAsync {
+            val timeBefore = System.currentTimeMillis()
+            while (System.currentTimeMillis() - timeBefore > 50.0) {
+                TODO("Run forceatlas2 iteration")
+            }
+        } success {
+            TODO("update graph")
+            if (TODO("layoutNotCancelled")) layout()
+        }
     }
 
     fun entered(event: MouseEvent) {

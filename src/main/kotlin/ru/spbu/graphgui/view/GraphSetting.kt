@@ -25,7 +25,7 @@ object graphSetting {
     fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
         for (i in (0..number)) {
             for (j in i + 1..number) {
-                val a = abs(Random.nextInt() % 6)
+                val a = abs(Random.nextInt() % 1000)
                 val b = abs(Random.nextInt() % 2)
                 val m = abs(Random.nextDouble())
                 if (a == 0) {
