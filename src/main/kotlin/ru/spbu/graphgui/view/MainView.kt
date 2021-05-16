@@ -342,7 +342,6 @@ class MainView : View("Graph") {
     }
 
     private fun makeLayout2(sourcePath: String): Graph {
-
         val startTime = System.currentTimeMillis()
         val seed: Long? = null
         val threadCount = Runtime.getRuntime().availableProcessors()
