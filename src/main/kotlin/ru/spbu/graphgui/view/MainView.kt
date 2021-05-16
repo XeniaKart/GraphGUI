@@ -48,8 +48,8 @@ class MainView : View("Graph") {
     var graphProperty = objectProperty<GraphView<String, Double>>()
     var graph: GraphView<String, Double>? by graphProperty
     var boolDirect = true
-    var sourcePath: String = "empty"
-    var targetPath: String = "empty"
+    lateinit var sourcePath: String
+    lateinit var targetPath: String
     var graphCreate = false
     override val root = borderpane {
         centerProperty().bind(graphProperty.objectBinding { graph ->
@@ -188,33 +188,24 @@ class MainView : View("Graph") {
             "Выбрать файл",
             arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
             null,
-            FileChooserMode.Save,
+            FileChooserMode.Single,
             currentWindow
         )
-        println(file)
-//        val fileChooser = FileChooser()
-//        fileChooser.title = "Выбрать файл";
-//        fileChooser.extensionFilters.addAll(FileChooser.ExtensionFilter("CSV", "*.csv"))
-//        val file = fileChooser.showOpenDialog(primaryStage)
-//        if (file != null) {
-//            sourcePath = file.absolutePath
-//            println(sourcePath)
-//        }
-//        graph = GraphView(graphSetting.readGraph(sourcePath))
-//        graphCreate = true
-//        randomGraph = false
+        graph = GraphView(graphSetting.readGraph(file.first()))
+        sourcePath = file.first().toString()
+        graphCreate = true
+        randomGraph = false
     }
 
     fun saveFilePC() {
-        val directoryChooser = DirectoryChooser()
-        directoryChooser.title = "Выбрать папку"
-        val dir = directoryChooser.showDialog(primaryStage)
-        if (dir != null) {
-            targetPath = dir.absolutePath
-            println(targetPath)
-        } else {
-            targetPath = "randomGraph.csv"
-        }
+        val file = chooseFile(
+            "Выбрать файл",
+            arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
+            null,
+            FileChooserMode.Save,
+            currentWindow
+        )
+        targetPath = file.first().toString()
         csvSave(targetPath)
     }
 

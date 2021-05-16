@@ -25,7 +25,7 @@ object graphSetting {
     fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
         for (i in (0..number)) {
             for (j in i + 1..number) {
-                val a = abs(Random.nextInt() % 1000)
+                val a = abs(Random.nextInt() % 6)
                 val b = abs(Random.nextInt() % 2)
                 val m = abs(Random.nextDouble())
                 if (a == 0) {
@@ -37,32 +37,10 @@ object graphSetting {
                 }
             }
         }
-
-//        addVertex("A")
-//        addVertex("B")
-//        addVertex("C")
-//        addVertex("D")
-//        addVertex("E")
-//        addVertex("F")
-//
-//        addVertex("G")
-//
-//        addEdge("G", "F", 0.2)
-//        addEdge("F", "D", 0.2)
-//        addEdge("B", "C", 0.9)
-//        addEdge("C", "D", 0.57)
-//        addEdge("D", "B", 1.0)
-//        addEdge("D", "E", 0.8)
-//        addEdge("E", "G", 0.4)
-//        addEdge("F", "E", 0.6)
-//        addEdge("A", "B", 0.7)
-//        addEdge("C", "A", 1.3)
-//        addEdge("A", "D", 0.3)
     }
 
 
-    fun readGraph(path: String): Graph<String, Double> = Graph<String, Double>().apply {
-        val file = File(path)
+    fun readGraph(file: File): Graph<String, Double> = Graph<String, Double>().apply {
         if (!file.exists()) {
             System.err.println("$file not found.")
             exitProcess(1)
@@ -71,7 +49,6 @@ object graphSetting {
 
         for (line in lines.drop(1)) {
             val array = line.split(",")
-//            println(array)
             addEdge(array[0], array[1], array[6].toDouble())
         }
     }
