@@ -251,10 +251,7 @@ class MainView : View("Graph") {
             }
             for (i in graph!!.edgesVertex()) {
                 sourceVertex.addLast(i.vertices.first)
-                println(i.vertices.first)
                 targetVertex.addLast(i.vertices.second)
-            }
-            for (i in graph!!.edgesVertex()) {
                 edgeWeight.addLast(i.element)
             }
             if (boolDirect) {
@@ -280,28 +277,27 @@ class MainView : View("Graph") {
             val maximum = valueCentralities.values.maxOrNull()
             var intervals = 0.0
             if ((maximum != null) && (minimum != null)) {
-                intervals = (maximum - minimum) / 3
+                intervals = (maximum - minimum) / 7
             }
             for (i in valueCentralities) {
-                if (i.value >= minimum!! && i.value < minimum + intervals) {
-                    for (j in graph!!.vertices()) {
-                        if (i.key == j.vertex) {
-                            j.color = Color.ORANGE
-                        }
-                    }
-                } else if (i.value >= minimum + intervals && i.value <= minimum + 2 * intervals) {
-                    for (j in graph!!.vertices()) {
-                        if (i.key == j.vertex) {
-                            j.color = Color.BLUE
-                        }
-                    }
-                } else {
-                    for (j in graph!!.vertices()) {
-                        if (i.key == j.vertex) {
-                            j.color = Color.GREEN
-                        }
-                    }
+                when {
+                    i.value >= minimum!! && i.value < minimum + intervals -> setColor(i, Color.RED)
+                    i.value >= minimum + intervals && i.value < minimum + 2 * intervals -> setColor(i, Color.ORANGE)
+                    i.value >= minimum + 2 * intervals && i.value < minimum + 3 * intervals -> setColor(i, Color.YELLOW)
+                    i.value >= minimum + 3 * intervals && i.value < minimum + 4 * intervals -> setColor(i, Color.GREEN)
+                    i.value >= minimum + 4 * intervals && i.value < minimum + 5 * intervals -> setColor(i, Color.AQUA)
+                    i.value >= minimum + 5 * intervals && i.value < minimum + 6 * intervals -> setColor(i, Color.BLUE)
+                    i.value >= minimum + 6 * intervals && i.value < minimum + 7 * intervals -> setColor(i, Color.PURPLE)
                 }
+            }
+        }
+    }
+
+    private fun setColor(i: MutableMap.MutableEntry<String, Double>, color: Color) {
+        for (j in graph!!.vertices()) {
+            if (i.key == j.vertex) {
+                j.color = color
+                break
             }
         }
     }
