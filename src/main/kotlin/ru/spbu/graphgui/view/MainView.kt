@@ -1,5 +1,6 @@
 package ru.spbu.graphgui.view
 
+import ru.spbu.graphgui.view.JDBC.*
 import javafx.geometry.Orientation
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ScrollPane
@@ -15,6 +16,11 @@ import org.gephi.io.processor.plugin.DefaultProcessor
 import org.gephi.layout.plugin.forceAtlas2.ForceAtlas2
 import org.gephi.layout.spi.Layout
 import org.gephi.project.api.ProjectController
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.openide.util.Lookup
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
@@ -24,14 +30,20 @@ import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
 import org.gephi.graph.api.Node as GephiNode
+import org.jetbrains.exposed.sql.*
+import javax.xml.transform.Source
 
+
+private const val dbPath = "exposed_database.db"
 
 class MainView : View("Graph") {
+
+    private val delete by lazy { ("DELETE FROM Edges;") }
     private val numberOfIterationsProperty = intProperty(10000)
     private var numberOfIterations by numberOfIterationsProperty
     private var progressValueProperty = doubleProperty()
     private var progressValue by progressValueProperty
-
+    private var tableAvailability = false
     //    private var countNodesProperty = intProperty(30)
     private var countNodes = 30
     private var barnesHutThetaProperty = doubleProperty(1.2)
@@ -72,6 +84,14 @@ class MainView : View("Graph") {
                 item("Open file").action {
                     chooseFilePC()
                     drawRandomGraph()
+                }
+                item("JDBC").action {
+                    if (!tableAvailability){
+                        tableAvailability = true
+                        addJdbc()
+                    } else {
+
+                    }
                 }
             }
         }
@@ -385,6 +405,41 @@ class MainView : View("Graph") {
             if (i.key == j.vertex) {
                 j.color = color
                 break
+            }
+        }
+    }
+
+    fun addJdbc() {
+        val connection = Database.connect("jdbc:sqlite:$dbPath", driver = "org.sqlite.JDBC")
+        transaction {
+            addLogger(StdOutSqlLogger)
+            SchemaUtils.create(Nodes)
+            SchemaUtils.create(Edges)
+            graph?.let {
+                for (i in it.vertices()) {
+                    Node.new {
+                        name = i.vertex
+                        coordX = i.position.first
+                        coordY = i.position.second
+                        color = i.color.toString()
+                        radius = i.radius
+                    }
+                }
+            }
+            graph?.let {
+                for (i in it.edgesVertex()) {
+                    val eg = Edge.new {
+                        sourceNode = i.vertices.first
+                        targetNode = i.vertices.second
+                        direction = if (boolDirect) {
+                            "Directed"
+                        } else {
+                            "Undirected"
+                        }
+                        weight = i.element
+                    }
+                    eg.delete()
+                }
             }
         }
     }
