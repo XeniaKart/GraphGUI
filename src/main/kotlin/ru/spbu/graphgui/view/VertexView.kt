@@ -10,7 +10,7 @@ open class VertexView<V>(
     x: Double,
     y: Double,
     r: DoubleProperty,
-    color: Color,
+    color: Color
 ) : Circle(x, y, r.get(), color) {
     init {
         radiusProperty().bind(r)

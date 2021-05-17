@@ -8,7 +8,6 @@ import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
-
 @Suppress("ClassName")
 object graphSetting {
 
@@ -27,7 +26,7 @@ object graphSetting {
         val label = booleanProperty()
     }
 
-    fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
+    fun createRandomGraphTree(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
         var nextVertexID = 0
         var newVertices = ArrayDeque<String>()
 
@@ -52,6 +51,23 @@ object graphSetting {
                 val edgeWeight = abs(Random.nextDouble())
                 addEdge(newVertex, newVertexID.toString(), edgeWeight)
                 newVertices.addLast(newVertexID.toString())
+            }
+        }
+    }
+
+    fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
+        for (i in (0 until number)) {
+            for (j in i + 1 until number) {
+                val a = abs(Random.nextInt() % (1.0 / graph.probabilityOfCreationAnEdge.value)).toInt()
+                val b = abs(Random.nextInt() % 2)
+                val m = abs(Random.nextDouble())
+                if (a == 0) {
+                    if (b == 0) {
+                        addEdge(i.toString(), j.toString(), m)
+                    } else {
+                        addEdge(j.toString(), i.toString(), m)
+                    }
+                }
             }
         }
     }

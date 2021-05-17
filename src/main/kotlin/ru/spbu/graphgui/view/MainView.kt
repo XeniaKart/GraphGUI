@@ -32,9 +32,7 @@ import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
 import org.gephi.graph.api.Node as GephiNode
-import org.jetbrains.exposed.sql.*
 import ru.spbu.graphgui.community.CommunityDetection
-import javax.xml.transform.Source
 
 
 private const val dbPath = "exposed_database.db"
@@ -184,6 +182,7 @@ class MainView : View("Graph") {
 //                          }
 //                      }
                     add(BorderpaneWithDoubleValue("Radius of nodes", "6.0", graphSetting.vertex.radius))
+                    add(BorderpaneWithDoubleValue("Width of lines", "1.0", graphSetting.edge.width))
                     hbox {
                         togglebutton("Directed", toggleGroup)
                         togglebutton("Undirected", toggleGroup)
@@ -193,8 +192,20 @@ class MainView : View("Graph") {
                     button("Create random graph") {
                         action {
 //                            runAsync {
+                            targetPath = "randomGraph.csv"
+                            graph = GraphView(graphSetting.createRandomGraph(countNodesProperty.value))
+                            csvSave(targetPath)
+                            graphCreate = true
+                            randomGraph = true
+                            drawRandomGraph()
+//                            } ui {}
+                        }
+                    }
+                    button("Create random tree graph") {
+                        action {
+//                            runAsync {
                                 targetPath = "randomGraph.csv"
-                                graph = GraphView(graphSetting.createRandomGraph(countNodesProperty.value))
+                                graph = GraphView(graphSetting.createRandomGraphTree(countNodesProperty.value))
                                 csvSave(targetPath)
                                 graphCreate = true
                                 randomGraph = true
