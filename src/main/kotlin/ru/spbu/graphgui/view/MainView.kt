@@ -32,6 +32,9 @@ import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
 import org.gephi.graph.api.Node as GephiNode
+import org.jetbrains.exposed.sql.*
+import ru.spbu.graphgui.community.CommunityDetection
+import javax.xml.transform.Source
 
 
 private const val dbPath = "exposed_database.db"
@@ -208,6 +211,11 @@ class MainView : View("Graph") {
 
                         }
                     }
+                    button("Detect communities") {
+                        action {
+                            detectCommunities()
+                        }
+                    }
                     separator(Orientation.HORIZONTAL)
                     add(BorderpaneWithIntValue("Number of iteration", "10000", numberOfIterationsProperty))
                     checkbox("strongGravityMode") {
@@ -301,6 +309,41 @@ class MainView : View("Graph") {
                 if (y.vertex == n.id.toString()) {
                     y.position = Pair(n.x().toDouble(), n.y().toDouble())
                     break
+                }
+            }
+        }
+    }
+
+    private fun detectCommunities() {
+        val sourceVertex = ArrayDeque<String>()
+        val targetVertex = ArrayDeque<String>()
+        val edgeWeights = ArrayDeque<Double>()
+
+        if (graph != null) {
+            for (i in graph!!.edgesVertex()) {
+                sourceVertex.addLast(i.vertices.first)
+                targetVertex.addLast(i.vertices.second)
+                edgeWeights.addLast(i.element)
+            }
+
+            val communities = CommunityDetection().detectCommunities(sourceVertex, targetVertex, edgeWeights)
+            val communitiesColors = hashMapOf<Int, Color>()
+
+            val clrRandom = Random(99) // всегда с того же числа, чтобы получать тот же порядок цветов
+            for (i in communities) {
+                if (!communitiesColors.contains(i.value)) {
+                    communitiesColors[i.value] = Color(
+                        clrRandom.nextDouble(),
+                        clrRandom.nextDouble(),
+                        clrRandom.nextDouble(),
+                        1.0
+                    )
+                }
+
+                for (j in graph!!.vertices()) {
+                    if (i.key == j.vertex) {
+                        j.color = communitiesColors[i.value]!!
+                    }
                 }
             }
         }
