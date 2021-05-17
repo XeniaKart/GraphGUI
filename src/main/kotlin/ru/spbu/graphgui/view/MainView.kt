@@ -155,8 +155,9 @@ class MainView : View("Graph") {
                     saveFilePC()
                 }
                 item("Open file").action {
-                    chooseFilePC()
-                    drawRandomGraph()
+                    if (!chooseFilePC()){
+                        drawRandomGraph()
+                    }
                 }
                 item("JDBC").action {
                     if (!tableAvailability){
@@ -265,7 +266,7 @@ class MainView : View("Graph") {
         }
     }
 
-    private fun chooseFilePC() {
+    private fun chooseFilePC():Boolean {
         val file = chooseFile(
             "Выбрать файл",
             arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
@@ -273,10 +274,14 @@ class MainView : View("Graph") {
             FileChooserMode.Single,
             currentWindow
         )
+        if (file.isEmpty()) {
+            return true
+        }
         graph = GraphView(graphSetting.readGraph(file.first()))
         sourcePath = file.first().toString()
         graphCreate = true
         randomGraph = false
+        return false
     }
 
     private fun saveFilePC() {
@@ -287,6 +292,9 @@ class MainView : View("Graph") {
             FileChooserMode.Save,
             currentWindow
         )
+        if (file.isEmpty()) {
+            return
+        }
         targetPath = file.first().toString()
         csvSave(targetPath)
     }
@@ -410,7 +418,7 @@ class MainView : View("Graph") {
                     i.value >= minimum + 3 * intervals && i.value < minimum + 4 * intervals -> setColor(i, Color.GREEN)
                     i.value >= minimum + 4 * intervals && i.value < minimum + 5 * intervals -> setColor(i, Color.AQUA)
                     i.value >= minimum + 5 * intervals && i.value < minimum + 6 * intervals -> setColor(i, Color.BLUE)
-                    i.value >= minimum + 6 * intervals && i.value < minimum + 7 * intervals -> setColor(i, Color.PURPLE)
+                    else -> setColor(i, Color.PURPLE)
                 }
             }
         }
