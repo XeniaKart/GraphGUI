@@ -1,9 +1,16 @@
 package ru.spbu.graphgui.view
 
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transaction
 import ru.spbu.graphgui.model.Graph
+import ru.spbu.graphgui.view.JDBC.Edges
+import ru.spbu.graphgui.view.JDBC.Nodes
 import tornadofx.booleanProperty
 import tornadofx.doubleProperty
 import java.io.File
+import java.sql.Connection
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.system.exitProcess
@@ -57,6 +64,7 @@ object graphSetting {
 
     fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
         for (i in (0 until number)) {
+            addVertex(i.toString())
             for (j in i + 1 until number) {
                 val a = abs(Random.nextInt() % (1.0 / graph.probabilityOfCreationAnEdge.value)).toInt()
                 val b = abs(Random.nextInt() % 2)
@@ -84,4 +92,22 @@ object graphSetting {
             addEdge(array[0], array[1], array[6].toDouble())
         }
     }
+
+//    private fun readJdbc() {
+//        Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
+//            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+//        }
+//        return transaction {
+//            Graph<String, Double>().apply {
+//                Nodes.selectAll().forEach {
+//                    addVertex(
+//                        it[Nodes.name]
+//                    )
+//                }
+//                Edges.selectAll().forEach {
+//                    addEdge(it[Edges.sourceNode].value, it[Edges.targetNode].value, it[Edges.weight])
+//                }
+//            }
+//        }
+//    }
 }

@@ -18,10 +18,8 @@ import org.gephi.io.processor.plugin.DefaultProcessor
 import org.gephi.layout.plugin.forceAtlas2.ForceAtlas2
 import org.gephi.layout.spi.Layout
 import org.gephi.project.api.ProjectController
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.openide.util.Lookup
 import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
@@ -33,20 +31,16 @@ import kotlin.random.Random
 import kotlin.system.exitProcess
 import org.gephi.graph.api.Node as GephiNode
 import ru.spbu.graphgui.community.CommunityDetection
+import java.sql.Connection
 
 
 private const val dbPath = "exposed_database.db"
 
 class MainView : View("Graph") {
-
-    //    private val delete by lazy { ("DELETE FROM Edges;") }
     private val numberOfIterationsProperty = intProperty(10000)
     private var numberOfIterations by numberOfIterationsProperty
     private var progressValueProperty = doubleProperty()
     private var progressValue by progressValueProperty
-    private var tableAvailability = false
-
-    //    private var countNodesProperty = intProperty(30)
     private var countNodesProperty = intProperty(30)
     private var barnesHutThetaProperty = doubleProperty(1.2)
     private var gravityProperty = doubleProperty(1.0)
@@ -56,6 +50,7 @@ class MainView : View("Graph") {
     private var strongGravityMode = false
     private var outboundAttractionDistribution = false
     private var randomGraph = false
+    var fileJdbc = File("sql.sqlite")
     private var graphProperty = objectProperty<GraphView<String, Double>>()
     private var graph: GraphView<String, Double>? by graphProperty
     private var boolDirect = true
@@ -64,11 +59,21 @@ class MainView : View("Graph") {
     private var graphCreate = false
     private val toggleGroup = ToggleGroup()
 
+    init {
+        if (fileJdbc.exists()) {
+            graphCreate = true
+            graph = readJdbc()
+            targetPath = "randomGraph.csv"
+            csvSave(targetPath)
+        }
+    }
+
     private class BorderpaneWithDoubleValue(
         labelText: String,
         DefaultValue: String,
         doubleVariableProperty: DoubleProperty
     ) : View() {
+
         override val root = borderpane {
             left = label(labelText)
             right = textfield(DefaultValue) {
@@ -169,11 +174,8 @@ class MainView : View("Graph") {
                     }
                 }
                 item("JDBC").action {
-                    if (!tableAvailability) {
-                        tableAvailability = true
+                    if (graphCreate) {
                         addJdbc()
-                    } else {
-
                     }
                 }
             }
@@ -186,11 +188,6 @@ class MainView : View("Graph") {
                             println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
                         }
                     }
-//                      checkbox("Show edges labels", graphSetting.edge.label) {
-//                          action {
-//                               println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
-//                          }
-//                      }
                     add(BorderpaneWithDoubleValue("Radius of nodes", "6.0", graphSetting.vertex.radius))
                     add(BorderpaneWithDoubleValue("Width of lines", "1.0", graphSetting.edge.width))
                     hbox {
@@ -447,35 +444,52 @@ class MainView : View("Graph") {
     }
 
     private fun addJdbc() {
-        val connection = Database.connect("jdbc:sqlite:$dbPath", driver = "org.sqlite.JDBC")
+        Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
+            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+        }
         transaction {
             addLogger(StdOutSqlLogger)
-            SchemaUtils.create(Nodes)
-            SchemaUtils.create(Edges)
-            graph?.let {
-                for (i in it.vertices()) {
-                    Node.new {
-                        name = i.vertex
-                        coordX = i.position.first
-                        coordY = i.position.second
-                        color = i.color.toString()
-                        radius = i.radius
-                    }
+            SchemaUtils.drop(Nodes, Edges)
+            SchemaUtils.create(Nodes, Edges)
+            Nodes.batchInsert(graph!!.vertices()) {
+                this[Nodes.id] = it.vertex
+                this[Nodes.name] = it.vertex
+                this[Nodes.color] = it.color.toString()
+                this[Nodes.coordX] = it.position.first
+                this[Nodes.coordY] = it.position.second
+                this[Nodes.radius] = it.radius
+            }
+            Edges.batchInsert(graph!!.edgesVertex()) {
+                this[Edges.sourceNode] = it.vertices.first
+                this[Edges.targetNode] = it.vertices.second
+                this[Edges.weight] = it.element
+            }
+        }
+    }
+
+    private fun readJdbc(): GraphView<String, Double> {
+        Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
+            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+        }
+        return transaction {
+            var graph = ru.spbu.graphgui.model.Graph<String, Double>().apply {
+                Nodes.selectAll().forEach {
+                    addVertex(it[Nodes.name])
+                }
+                Edges.selectAll().forEach {
+                    addEdge(it[Edges.sourceNode].value, it[Edges.targetNode].value, it[Edges.weight])
                 }
             }
-            graph?.let {
-                for (i in it.edgesVertex()) {
-                    val eg = Edge.new {
-                        sourceNode = i.vertices.first
-                        targetNode = i.vertices.second
-                        direction = if (boolDirect) {
-                            "Directed"
-                        } else {
-                            "Undirected"
+            GraphView(graph).apply {
+                Nodes.selectAll().forEach {
+                    for (i in vertices()) {
+                        if (it[Nodes.name] == i.vertex) {
+                            i.position = Pair(it[Nodes.coordX], it[Nodes.coordY])
+                            i.color = c(it[Nodes.color])
+                            graphSetting.vertex.radius.value = it[Nodes.radius]
+                            break
                         }
-                        weight = i.element
                     }
-                    eg.delete()
                 }
             }
         }
