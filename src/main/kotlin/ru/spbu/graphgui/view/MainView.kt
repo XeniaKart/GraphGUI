@@ -39,12 +39,13 @@ private const val dbPath = "exposed_database.db"
 
 class MainView : View("Graph") {
 
-//    private val delete by lazy { ("DELETE FROM Edges;") }
+    //    private val delete by lazy { ("DELETE FROM Edges;") }
     private val numberOfIterationsProperty = intProperty(10000)
     private var numberOfIterations by numberOfIterationsProperty
     private var progressValueProperty = doubleProperty()
     private var progressValue by progressValueProperty
     private var tableAvailability = false
+
     //    private var countNodesProperty = intProperty(30)
     private var countNodesProperty = intProperty(30)
     private var barnesHutThetaProperty = doubleProperty(1.2)
@@ -63,7 +64,11 @@ class MainView : View("Graph") {
     private var graphCreate = false
     private val toggleGroup = ToggleGroup()
 
-    private class BorderpaneWithDoubleValue(labelText:String, DefaultValue: String, doubleVariableProperty: DoubleProperty): View() {
+    private class BorderpaneWithDoubleValue(
+        labelText: String,
+        DefaultValue: String,
+        doubleVariableProperty: DoubleProperty
+    ) : View() {
         override val root = borderpane {
             left = label(labelText)
             right = textfield(DefaultValue) {
@@ -86,7 +91,7 @@ class MainView : View("Graph") {
         }
 
         private fun setDoubleToTextfield(new: String, old: String): String =
-            if (new.last() == 'd' ||  new.last() == 'f')
+            if (new.last() == 'd' || new.last() == 'f')
                 old
             else if (new.toDoubleOrNull() != null)
                 new
@@ -106,7 +111,11 @@ class MainView : View("Graph") {
                 ("${text}0").toDouble()
     }
 
-    private class BorderpaneWithIntValue(labelText:String, DefaultValue: String, intVariableProperty: IntegerProperty): View() {
+    private class BorderpaneWithIntValue(
+        labelText: String,
+        DefaultValue: String,
+        intVariableProperty: IntegerProperty
+    ) : View() {
         override val root = borderpane {
             left = label(labelText)
             right = textfield(DefaultValue) {
@@ -155,12 +164,12 @@ class MainView : View("Graph") {
                     saveFilePC()
                 }
                 item("Open file").action {
-                    if (!chooseFilePC()){
+                    if (!chooseFilePC()) {
                         drawRandomGraph()
                     }
                 }
                 item("JDBC").action {
-                    if (!tableAvailability){
+                    if (!tableAvailability) {
                         tableAvailability = true
                         addJdbc()
                     } else {
@@ -189,29 +198,31 @@ class MainView : View("Graph") {
                         togglebutton("Undirected", toggleGroup)
                     }
                     add(BorderpaneWithIntValue("Max count of nodes", "30", countNodesProperty))
-                    add(BorderpaneWithDoubleValue("Probability of \nedge creation", "0.5", graphSetting.graph.probabilityOfCreationAnEdge))
+                    add(
+                        BorderpaneWithDoubleValue(
+                            "Probability of \nedge creation",
+                            "0.5",
+                            graphSetting.graph.probabilityOfCreationAnEdge
+                        )
+                    )
                     button("Create random graph") {
                         action {
-//                            runAsync {
                             targetPath = "randomGraph.csv"
                             graph = GraphView(graphSetting.createRandomGraph(countNodesProperty.value))
                             csvSave(targetPath)
                             graphCreate = true
                             randomGraph = true
                             drawRandomGraph()
-//                            } ui {}
                         }
                     }
                     button("Create random tree graph") {
                         action {
-//                            runAsync {
-                                targetPath = "randomGraph.csv"
-                                graph = GraphView(graphSetting.createRandomGraphTree(countNodesProperty.value))
-                                csvSave(targetPath)
-                                graphCreate = true
-                                randomGraph = true
-                                drawRandomGraph()
-//                            } ui {}
+                            targetPath = "randomGraph.csv"
+                            graph = GraphView(graphSetting.createRandomGraphTree(countNodesProperty.value))
+                            csvSave(targetPath)
+                            graphCreate = true
+                            randomGraph = true
+                            drawRandomGraph()
                         }
                     }
                     separator(Orientation.HORIZONTAL)
@@ -225,7 +236,9 @@ class MainView : View("Graph") {
                     }
                     button("Detect communities") {
                         action {
-                            detectCommunities()
+                            runAsync() {
+                                detectCommunities()
+                            } success {}
                         }
                     }
                     separator(Orientation.HORIZONTAL)
@@ -266,7 +279,7 @@ class MainView : View("Graph") {
         }
     }
 
-    private fun chooseFilePC():Boolean {
+    private fun chooseFilePC(): Boolean {
         val file = chooseFile(
             "Выбрать файл",
             arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),

@@ -33,19 +33,6 @@ class Scroller : Controller() {
         panelWithGraph.parent.parent.layout()
     }
 
-    // how to do layout
-    fun layout() {
-        runAsync {
-            val timeBefore = System.currentTimeMillis()
-            while (System.currentTimeMillis() - timeBefore > 50.0) {
-                TODO("Run forceatlas2 iteration")
-            }
-        } success {
-            TODO("update graph")
-            if (TODO("layoutNotCancelled")) layout()
-        }
-    }
-
     private fun check(event: ScrollEvent): Pane {
         return event.target as Pane
     }
