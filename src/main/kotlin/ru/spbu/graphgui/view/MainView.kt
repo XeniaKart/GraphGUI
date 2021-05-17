@@ -493,36 +493,12 @@ class MainView : View("Graph") {
 
     private fun writeOutput(g: Graph, formats: Set<String?>, output: String?) {
         try {
-            // ExporterCSV, ExporterDL, ExporterGDF, ExporterGEXF, ExporterGML, ExporterGraphML, ExporterPajek, ExporterVNA, PDFExporter, PNGExporter, SVGExporter
             val ec = Lookup.getDefault().lookup(ExportController::class.java)
             for (format in formats) {
-                if (format == "txt") {
-                    val pw = PrintWriter(
-                        FileWriter(
-                            output + if (output!!.toLowerCase().endsWith(".$format")) "" else ".$format"
-                        )
-                    )
-                    pw.print(
-                        """
-                            id	x	y
-
-                            """.trimIndent()
-                    )
-                    for (n in g.nodes) {
-                        pw.print(n.id)
-                        pw.print("\t")
-                        pw.print(n.x())
-                        pw.print("\t")
-                        pw.print(n.y())
-                        pw.print("\n")
-                    }
-                    pw.close()
-                } else {
-                    ec.exportFile(
-                        File(output + if (output!!.toLowerCase().endsWith(".$format")) "" else ".$format"),
-                        ec.getExporter(format)
-                    )
-                }
+                ec.exportFile(
+                    File(output + if (output!!.toLowerCase().endsWith(".$format")) "" else ".$format"),
+                    ec.getExporter(format)
+                )
             }
         } catch (x: IOException) {
             x.printStackTrace()
