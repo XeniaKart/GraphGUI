@@ -1,11 +1,11 @@
 package ru.spbu.graphgui.styles
 
-import javafx.scene.paint.Color
+//import javafx.scene.paint.Color
 import tornadofx.Stylesheet
-import tornadofx.cssclass
+//import tornadofx.cssclass
 import tornadofx.loadFont
 import tornadofx.px
-import tornadofx.box
+//import tornadofx.box
 
 class Styles : Stylesheet() {
     companion object {

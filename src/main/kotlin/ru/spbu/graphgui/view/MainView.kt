@@ -91,7 +91,7 @@ class MainView : View("Graph") {
                     borderpane {
                         left = label("Radius of nodes")
                         right = textfield("6.0") {
-                            graphSetting.vertex.radius.bind(textProperty().doubleBinding() { it!!.toDouble() })
+                            graphSetting.vertex.radius.bind(textProperty().doubleBinding { it!!.toDouble() })
                         }
                     }
                     hbox {
@@ -124,7 +124,7 @@ class MainView : View("Graph") {
                     borderpane {
                         left = label("Probability of \nedge creation")
                         right = textfield("0.5") {
-                            graphSetting.graph.probabilityOfCreationAnEdge.bind(textProperty().doubleBinding() { it!!.toDouble() })
+                            graphSetting.graph.probabilityOfCreationAnEdge.bind(textProperty().doubleBinding { it!!.toDouble() })
                         }
                     }
                     button("Create random graph") {
@@ -176,7 +176,7 @@ class MainView : View("Graph") {
                             textProperty().addListener { _, old, new ->
                                 textProperty().value = setDoubleToTextfield(new, old)
                             }
-                            focusedProperty().addListener { _, old, new ->
+                            focusedProperty().addListener { _, _, new ->
                                 if (!new) {
                                     gravity = setDoubleFromTextfield(text)
                                     textProperty().value = gravity.toString()
@@ -200,7 +200,6 @@ class MainView : View("Graph") {
                     }
                     borderpane {
                         left = label("Barnes hut theta")
-                        var intermediateVariable: Double
                         right = textfield("1.2") {
 //                    textProperty().addListener { _, old, new ->
 //                        intermediateVariable = setDoubleFromTextfield(new, old)
