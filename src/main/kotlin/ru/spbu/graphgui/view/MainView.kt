@@ -1,5 +1,7 @@
 package ru.spbu.graphgui.view
 
+import javafx.beans.property.DoubleProperty
+import javafx.beans.property.IntegerProperty
 import ru.spbu.graphgui.view.JDBC.*
 import javafx.geometry.Orientation
 import javafx.scene.control.MenuBar
@@ -30,24 +32,22 @@ import kotlin.math.floor
 import kotlin.random.Random
 import kotlin.system.exitProcess
 import org.gephi.graph.api.Node as GephiNode
-import org.jetbrains.exposed.sql.*
-import javax.xml.transform.Source
 
 
 private const val dbPath = "exposed_database.db"
 
 class MainView : View("Graph") {
 
-    private val delete by lazy { ("DELETE FROM Edges;") }
+//    private val delete by lazy { ("DELETE FROM Edges;") }
     private val numberOfIterationsProperty = intProperty(10000)
     private var numberOfIterations by numberOfIterationsProperty
     private var progressValueProperty = doubleProperty()
     private var progressValue by progressValueProperty
     private var tableAvailability = false
     //    private var countNodesProperty = intProperty(30)
-    private var countNodes = 30
+    private var countNodesProperty = intProperty(30)
     private var barnesHutThetaProperty = doubleProperty(1.2)
-    private var gravity = 1.0
+    private var gravityProperty = doubleProperty(1.0)
     private var jitterToleranceProperty = doubleProperty(1.0)
     private var linLogMode = false
     private var scalingRatioProperty = doubleProperty(2.0)
@@ -61,6 +61,78 @@ class MainView : View("Graph") {
     private lateinit var targetPath: String
     private var graphCreate = false
     private val toggleGroup = ToggleGroup()
+
+    private class BorderpaneWithDoubleValue(labelText:String, DefaultValue: String, doubleVariableProperty: DoubleProperty): View() {
+        override val root = borderpane {
+            left = label(labelText)
+            right = textfield(DefaultValue) {
+                textProperty().addListener { _, old, new ->
+                    if (text != "")
+                        textProperty().value = setDoubleToTextfield(new, old)
+                }
+                focusedProperty().addListener { _, _, new ->
+                    if (!new) {
+                        if (textProperty().value != "") {
+                            doubleVariableProperty.value = setDoubleFromTextfield(text)
+                            textProperty().value = doubleVariableProperty.value.toString()
+                        } else {
+                            doubleVariableProperty.value = DefaultValue.toDouble()
+                            textProperty().value = DefaultValue
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun setDoubleToTextfield(new: String, old: String): String =
+            if (new.last() == 'd' ||  new.last() == 'f')
+                old
+            else if (new.toDoubleOrNull() != null)
+                new
+            else if (new.toIntOrNull() != null && new.filter { c -> c == '.' } == "")
+                new
+            else if (new.last() == '.' && new.filter { c -> c == '.' } == ".")
+                new
+            else
+                old
+
+        private fun setDoubleFromTextfield(text: String): Double =
+            if (text.toDoubleOrNull() != null)
+                text.toDouble()
+            else if (text.filter { c -> c == '.' } == "" && text != "")
+                ("$text.0").toDouble()
+            else
+                ("${text}0").toDouble()
+    }
+
+    private class BorderpaneWithIntValue(labelText:String, DefaultValue: String, intVariableProperty: IntegerProperty): View() {
+        override val root = borderpane {
+            left = label(labelText)
+            right = textfield(DefaultValue) {
+                textProperty().addListener { _, old, new ->
+                    if (textProperty().value != "")
+                        textProperty().value = setIntToTextfield(new, old)
+                }
+                focusedProperty().addListener { _, _, new ->
+                    if (!new) {
+                        if (textProperty().value != "") {
+                            intVariableProperty.value = textProperty().value.toInt()
+                        } else {
+                            intVariableProperty.value = DefaultValue.toInt()
+                            textProperty().value = DefaultValue
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun setIntToTextfield(new: String, old: String): String =
+            if (new.toIntOrNull() != null)
+                new
+            else
+                old
+    }
+
     override val root = borderpane {
         centerProperty().bind(graphProperty.objectBinding { graph ->
             graph?.let {
@@ -108,55 +180,23 @@ class MainView : View("Graph") {
 //                               println("edges labels are ${if (isSelected) "enabled" else "disabled"}")
 //                          }
 //                      }
-                    borderpane {
-                        left = label("Radius of nodes")
-                        right = textfield("6.0") {
-                            graphSetting.vertex.radius.bind(textProperty().doubleBinding { it!!.toDouble() })
-                        }
-                    }
+                    add(BorderpaneWithDoubleValue("Radius of nodes", "6.0", graphSetting.vertex.radius))
                     hbox {
                         togglebutton("Directed", toggleGroup)
                         togglebutton("Undirected", toggleGroup)
                     }
-//                    button {
-//                        this.text("DIRECTED (CLICK TO CHANGE)")
-//                        action {
-//                            if (boolDirect)
-//                                this.text("UNDIRECTED (CLICK TO CHANGE)")
-//                            else
-//                                this.text("DIRECTED (CLICK TO CHANGE)")
-//                            boolDirect = !boolDirect
-//                        }
-//                    }
-                    borderpane {
-                        left = label("Max count of nodes")
-//                          textfield("30") {
-//                              countNodesProperty.bind(textProperty().integerBinding { it!!.toInt() })
-//                          }
-                        right = textfield("30") {
-                            textProperty().addListener { _, old, new ->
-                                countNodes = setIntFromTextfield(new, old)
-                                if (countNodes != 0)
-                                    textProperty().value = countNodes.toString()
-                            }
-                        }
-                    }
-                    borderpane {
-                        left = label("Probability of \nedge creation")
-                        right = textfield("0.5") {
-                            graphSetting.graph.probabilityOfCreationAnEdge.bind(textProperty().doubleBinding { it!!.toDouble() })
-                        }
-                    }
+                    add(BorderpaneWithIntValue("Max count of nodes", "30", countNodesProperty))
+                    add(BorderpaneWithDoubleValue("Probability of \nedge creation", "0.5", graphSetting.graph.probabilityOfCreationAnEdge))
                     button("Create random graph") {
                         action {
-                            runAsync {
+//                            runAsync {
                                 targetPath = "randomGraph.csv"
-                                /*graph = */GraphView(graphSetting.createRandomGraph(countNodes))
+                                graph = GraphView(graphSetting.createRandomGraph(countNodesProperty.value))
                                 csvSave(targetPath)
                                 graphCreate = true
                                 randomGraph = true
                                 drawRandomGraph()
-                            } ui {}
+//                            } ui {}
                         }
                     }
                     separator(Orientation.HORIZONTAL)
@@ -169,17 +209,7 @@ class MainView : View("Graph") {
                         }
                     }
                     separator(Orientation.HORIZONTAL)
-                    borderpane {
-                        left = label("Number of iteration")
-                        right = textfield("10000") {
-                            textProperty().addListener { _, old, new ->
-                                numberOfIterations = setIntFromTextfield(new, old)
-                                if (numberOfIterations != 0)
-                                    textProperty().value = numberOfIterations.toString()
-                            }
-//                    numberOfIterationsProperty.bind(textProperty().integerBinding { it!!.toInt() })
-                        }
-                    }
+                    add(BorderpaneWithIntValue("Number of iteration", "10000", numberOfIterationsProperty))
                     checkbox("strongGravityMode") {
                         action {
                             strongGravityMode = !strongGravityMode
@@ -190,47 +220,10 @@ class MainView : View("Graph") {
                             linLogMode = !linLogMode
                         }
                     }
-                    borderpane {
-                        left = label("Gravity")
-                        right = textfield("1.0") {
-                            textProperty().addListener { _, old, new ->
-                                textProperty().value = setDoubleToTextfield(new, old)
-                            }
-                            focusedProperty().addListener { _, _, new ->
-                                if (!new) {
-                                    gravity = setDoubleFromTextfield(text)
-                                    textProperty().value = gravity.toString()
-                                }
-                            }
-//                            gravity.bind(textProperty().doubleBinding { it!!.toDouble() })
-                        }
-
-                    }
-                    borderpane {
-                        left = label("Jitter tolerance")
-                        right = textfield("1.0") {
-                            jitterToleranceProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                        }
-                    }
-                    borderpane {
-                        left = label("Scaling ratio")
-                        right = textfield("2.0") {
-                            scalingRatioProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                        }
-                    }
-                    borderpane {
-                        left = label("Barnes hut theta")
-                        right = textfield("1.2") {
-//                    textProperty().addListener { _, old, new ->
-//                        intermediateVariable = setDoubleFromTextfield(new, old)
-//                        if (intermediateVariable != 0.0 && intermediateVariable) {
-//                            barnesHutTheta = intermediateVariable
-//                            textProperty().value = intermediateVariable.toString()
-//                        }
-//                    }
-                            barnesHutThetaProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
-                        }
-                    }
+                    add(BorderpaneWithDoubleValue("Gravity", "1.0", gravityProperty))
+                    add(BorderpaneWithDoubleValue("Jitter tolerance", "1.0", jitterToleranceProperty))
+                    add(BorderpaneWithDoubleValue("Scaling ratio", "2.0", scalingRatioProperty))
+                    add(BorderpaneWithDoubleValue("Barnes hut theta", "1.2", barnesHutThetaProperty))
                     button("Make layout") {
                         action {
                             if (graphCreate) {
@@ -251,38 +244,7 @@ class MainView : View("Graph") {
             }
             separator(Orientation.VERTICAL)
         }
-//            separator(Orientation.VERTICAL)
     }
-
-    private fun setIntFromTextfield(new: String, old: String): Int =
-        if (new.toIntOrNull() != null && new.isNotEmpty())
-            new.toInt()
-        else if (new.isEmpty())
-            0
-        else
-            old.toInt()
-
-    private fun setDoubleToTextfield(new: String, old: String): String =
-        if (new.last() == 'd' ||  new.last() == 'f')
-            old
-        else if (new.toDoubleOrNull() != null)
-            new
-        else if (new.toIntOrNull() != null && new.filter { c -> c == '.' } == "")
-            new
-        else if (new.last() == '.' && new.filter { c -> c == '.' } == ".")
-            new
-        else
-            old
-
-    private fun setDoubleFromTextfield(text: String): Double =
-        if (text.toDoubleOrNull() != null)
-            text.toDouble()
-        else if (text.filter { c -> c == '.' } == "")
-            ("$text.0").toDouble()
-        else if (text.last() == '.' && text.filter { c -> c == '.' } == ".")
-            ("${text}0").toDouble()
-        else
-            0.0
 
     private fun chooseFilePC() {
         val file = chooseFile(
@@ -409,7 +371,7 @@ class MainView : View("Graph") {
         }
     }
 
-    fun addJdbc() {
+    private fun addJdbc() {
         val connection = Database.connect("jdbc:sqlite:$dbPath", driver = "org.sqlite.JDBC")
         transaction {
             addLogger(StdOutSqlLogger)
@@ -561,7 +523,7 @@ class MainView : View("Graph") {
         layout.isLinLogMode = linLogMode
         layout.scalingRatio = scalingRatioProperty.value
         layout.isStrongGravityMode = strongGravityMode
-        layout.gravity = gravity
+        layout.gravity = gravityProperty.value
         layout.isOutboundAttractionDistribution = outboundAttractionDistribution
         layout.threadsCount = threadCount
         layout.initAlgo()
