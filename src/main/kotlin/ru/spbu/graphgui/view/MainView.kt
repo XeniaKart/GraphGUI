@@ -33,9 +33,6 @@ import org.gephi.graph.api.Node as GephiNode
 import ru.spbu.graphgui.community.CommunityDetection
 import java.sql.Connection
 
-
-private const val dbPath = "exposed_database.db"
-
 class MainView : View("Graph") {
     private val numberOfIterationsProperty = intProperty(10000)
     private var numberOfIterations by numberOfIterationsProperty
@@ -73,7 +70,6 @@ class MainView : View("Graph") {
         DefaultValue: String,
         doubleVariableProperty: DoubleProperty
     ) : View() {
-
         override val root = borderpane {
             left = label(labelText)
             right = textfield(DefaultValue) {
@@ -165,7 +161,7 @@ class MainView : View("Graph") {
         })
         top = MenuBar().apply {
             menu("File") {
-                item("Save", "Shortcut+S").action {
+                item("Save as csv").action {
                     saveFilePC()
                 }
                 item("Open file").action {
@@ -173,7 +169,7 @@ class MainView : View("Graph") {
                         drawRandomGraph()
                     }
                 }
-                item("JDBC").action {
+                item("Save as JDBC", "Shortcut+S").action {
                     if (graphCreate) {
                         addJdbc()
                     }
@@ -314,7 +310,7 @@ class MainView : View("Graph") {
         writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
         var count = 1
         for (i in graph!!.edgesVertex())
-            writer.print("${i.vertices.first},${i.vertices.second},Undirected, ${count++},,,${i.element})\n")
+            writer.print("${i.vertices.first},${i.vertices.second},Undirected, ${count++},,,${i.weight})\n")
         writer.flush()
         writer.close()
     }
@@ -352,7 +348,7 @@ class MainView : View("Graph") {
             for (i in graph!!.edgesVertex()) {
                 sourceVertex.addLast(i.vertices.first)
                 targetVertex.addLast(i.vertices.second)
-                edgeWeights.addLast(i.element)
+                edgeWeights.addLast(i.weight)
             }
 
             val communities = CommunityDetection().detectCommunities(sourceVertex, targetVertex, edgeWeights)
@@ -393,7 +389,7 @@ class MainView : View("Graph") {
             for (i in graph!!.edgesVertex()) {
                 sourceVertex.addLast(i.vertices.first)
                 targetVertex.addLast(i.vertices.second)
-                edgeWeight.addLast(i.element)
+                edgeWeight.addLast(i.weight)
             }
             if (boolDirect) {
                 graphBeetwCent1 = BetweennessCenralityWeightedDirected()
@@ -462,7 +458,7 @@ class MainView : View("Graph") {
             Edges.batchInsert(graph!!.edgesVertex()) {
                 this[Edges.sourceNode] = it.vertices.first
                 this[Edges.targetNode] = it.vertices.second
-                this[Edges.weight] = it.element
+                this[Edges.weight] = it.weight
             }
         }
     }
@@ -472,7 +468,7 @@ class MainView : View("Graph") {
             TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
         }
         return transaction {
-            var graph = ru.spbu.graphgui.model.Graph<String, Double>().apply {
+            val graph = ru.spbu.graphgui.model.Graph<String, Double>().apply {
                 Nodes.selectAll().forEach {
                     addVertex(it[Nodes.name])
                 }
@@ -552,7 +548,6 @@ class MainView : View("Graph") {
         }
         formats.add("gexf")
         formats.add("csv")
-//    TODO()
         if (formats.size == 0) {
             formats.add("txt")
         }

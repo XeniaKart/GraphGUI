@@ -1,16 +1,9 @@
 package ru.spbu.graphgui.view
 
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
 import ru.spbu.graphgui.model.Graph
-import ru.spbu.graphgui.view.JDBC.Edges
-import ru.spbu.graphgui.view.JDBC.Nodes
 import tornadofx.booleanProperty
 import tornadofx.doubleProperty
 import java.io.File
-import java.sql.Connection
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.system.exitProcess

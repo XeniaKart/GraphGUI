@@ -1,5 +1,7 @@
 package ru.spbu.graphgui.model
 
+import tornadofx.objectProperty
+
 class Graph<V, E> {
     private val vertices = hashMapOf<V, V>()
     private val edges = hashMapOf<Pair<V, V>, Edge<E, V>>()
@@ -22,9 +24,10 @@ class Graph<V, E> {
 
 
 class Edge<E, V>(
-    var element: E,
+    var weight: E,
     var first: V,
     var second: V,
 ) {
+    var weightProperty = objectProperty(weight)
     val vertices: Pair<V, V> = Pair(first, second)
 }
