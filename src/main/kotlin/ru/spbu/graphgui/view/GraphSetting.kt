@@ -19,7 +19,7 @@ object graphSetting {
     }
 
     object graph {
-        val widthAndHeight = doubleProperty(65_536.0)
+        val widthAndHeight = doubleProperty(500_000.0)
         var probabilityOfCreationAnEdge = doubleProperty(0.5)
     }
 

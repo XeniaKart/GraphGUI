@@ -3,7 +3,7 @@ package ru.spbu.graphgui.view
 import javafx.geometry.Orientation
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ScrollPane
-import javafx.scene.layout.VBox
+import javafx.scene.control.ToggleGroup
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import org.gephi.graph.api.Graph
@@ -35,7 +35,7 @@ class MainView : View("Graph") {
     //    private var countNodesProperty = intProperty(30)
     private var countNodes = 30
     private var barnesHutThetaProperty = doubleProperty(1.2)
-    private var gravityProperty = doubleProperty(1.0)
+    private var gravity = 1.0
     private var jitterToleranceProperty = doubleProperty(1.0)
     private var linLogMode = false
     private var scalingRatioProperty = doubleProperty(2.0)
@@ -48,6 +48,7 @@ class MainView : View("Graph") {
     private lateinit var sourcePath: String
     private lateinit var targetPath: String
     private var graphCreate = false
+    private val toggleGroup = ToggleGroup()
     override val root = borderpane {
         centerProperty().bind(graphProperty.objectBinding { graph ->
             graph?.let {
@@ -93,16 +94,20 @@ class MainView : View("Graph") {
                             graphSetting.vertex.radius.bind(textProperty().doubleBinding() { it!!.toDouble() })
                         }
                     }
-                    button {
-                        this.text("DIRECTED (CLICK TO CHANGE)")
-                        action {
-                            if (boolDirect)
-                                this.text("UNDIRECTED (CLICK TO CHANGE)")
-                            else
-                                this.text("DIRECTED (CLICK TO CHANGE)")
-                            boolDirect = !boolDirect
-                        }
+                    hbox {
+                        togglebutton("Directed", toggleGroup)
+                        togglebutton("Undirected", toggleGroup)
                     }
+//                    button {
+//                        this.text("DIRECTED (CLICK TO CHANGE)")
+//                        action {
+//                            if (boolDirect)
+//                                this.text("UNDIRECTED (CLICK TO CHANGE)")
+//                            else
+//                                this.text("DIRECTED (CLICK TO CHANGE)")
+//                            boolDirect = !boolDirect
+//                        }
+//                    }
                     borderpane {
                         left = label("Max count of nodes")
 //                          textfield("30") {
@@ -114,11 +119,6 @@ class MainView : View("Graph") {
                                 if (countNodes != 0)
                                     textProperty().value = countNodes.toString()
                             }
-                            focusedProperty().addListener { _, old, new ->
-                                if (!new) {
-                                    text = "cbcmrb";
-                                }
-                            }
                         }
                     }
                     borderpane {
@@ -129,20 +129,23 @@ class MainView : View("Graph") {
                     }
                     button("Create random graph") {
                         action {
-//                                runAsync {
-                            targetPath = "randomGraph.csv"
-                            graph = GraphView(graphSetting.createRandomGraph(countNodes))
-                            csvSave(targetPath)
-                            graphCreate = true
-                            randomGraph = true
-                            drawRandomGraph()
-//                                } ui {}
+                            runAsync {
+                                targetPath = "randomGraph.csv"
+                                /*graph = */GraphView(graphSetting.createRandomGraph(countNodes))
+                                csvSave(targetPath)
+                                graphCreate = true
+                                randomGraph = true
+                                drawRandomGraph()
+                            } ui {}
                         }
                     }
                     separator(Orientation.HORIZONTAL)
                     button("Calculate Betweenness Centrality") {
                         action {
-                            calculateBetweennessCentrality()
+                            runAsync {
+                                calculateBetweennessCentrality()
+                            } success {}
+
                         }
                     }
                     separator(Orientation.HORIZONTAL)
@@ -170,12 +173,16 @@ class MainView : View("Graph") {
                     borderpane {
                         left = label("Gravity")
                         right = textfield("1.0") {
-//                    textProperty().addListener { _, old, new ->
-//                        gravity = setDoubleFromTextfield(new, old)
-//                        if (gravity != 0.0)
-//                            textProperty().value = gravity.toString()
-//                    }
-                            gravityProperty.bind(textProperty().doubleBinding { it!!.toDouble() })
+                            textProperty().addListener { _, old, new ->
+                                textProperty().value = setDoubleToTextfield(new, old)
+                            }
+                            focusedProperty().addListener { _, old, new ->
+                                if (!new) {
+                                    gravity = setDoubleFromTextfield(text)
+                                    textProperty().value = gravity.toString()
+                                }
+                            }
+//                            gravity.bind(textProperty().doubleBinding { it!!.toDouble() })
                         }
 
                     }
@@ -236,13 +243,27 @@ class MainView : View("Graph") {
         else
             old.toInt()
 
-//    private fun setDoubleFromTextfield(new: String, old: String): Double =
-//        if (new.toDoubleOrNull() != null && new.isNotEmpty())
-//            new.toDouble()
-//        else if (new.isEmpty())
-//            0.0
-//        else
-//            old.toDouble()
+    private fun setDoubleToTextfield(new: String, old: String): String =
+        if (new.last() == 'd' ||  new.last() == 'f')
+            old
+        else if (new.toDoubleOrNull() != null)
+            new
+        else if (new.toIntOrNull() != null && new.filter { c -> c == '.' } == "")
+            new
+        else if (new.last() == '.' && new.filter { c -> c == '.' } == ".")
+            new
+        else
+            old
+
+    private fun setDoubleFromTextfield(text: String): Double =
+        if (text.toDoubleOrNull() != null)
+            text.toDouble()
+        else if (text.filter { c -> c == '.' } == "")
+            ("$text.0").toDouble()
+        else if (text.last() == '.' && text.filter { c -> c == '.' } == ".")
+            ("${text}0").toDouble()
+        else
+            0.0
 
     private fun chooseFilePC() {
         val file = chooseFile(
@@ -281,8 +302,13 @@ class MainView : View("Graph") {
     }
 
     private fun drawRandomGraph() {
+        var numberOfNodes = graph!!.vertices.size * 3
+        if (numberOfNodes < 100) {
+            numberOfNodes = 100
+        }
         for (y in graph!!.vertices.values) {
-            y.position = Pair(Random.nextDouble() * 300, -Random.nextDouble() * 300)
+            y.position =
+                Pair((2 * Random.nextDouble() - 1) * numberOfNodes, (2 * Random.nextDouble() - 1) * numberOfNodes)
         }
     }
 
@@ -481,7 +507,7 @@ class MainView : View("Graph") {
         layout.isLinLogMode = linLogMode
         layout.scalingRatio = scalingRatioProperty.value
         layout.isStrongGravityMode = strongGravityMode
-        layout.gravity = gravityProperty.value
+        layout.gravity = gravity
         layout.isOutboundAttractionDistribution = outboundAttractionDistribution
         layout.threadsCount = threadCount
         layout.initAlgo()
