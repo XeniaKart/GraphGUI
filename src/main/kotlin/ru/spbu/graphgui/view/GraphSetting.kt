@@ -4,7 +4,6 @@ import ru.spbu.graphgui.model.Graph
 import tornadofx.booleanProperty
 import tornadofx.doubleProperty
 import java.io.File
-import java.io.PrintWriter
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.system.exitProcess
@@ -24,23 +23,35 @@ object graphSetting {
     }
 
     object edge {
-        val width =  doubleProperty(1.0)
+        val width = doubleProperty(1.0)
         val label = booleanProperty()
     }
 
     fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
-        for (i in (0 until number)) {
-            for (j in i + 1 until number) {
-                val a = abs(Random.nextInt() % (1.0 / graph.probabilityOfCreationAnEdge.value)).toInt()
-                val b = abs(Random.nextInt() % 2)
-                val m = abs(Random.nextDouble())
-                if (a == 0) {
-                    if (b == 0) {
-                        addEdge(i.toString(), j.toString(), m)
-                    } else {
-                        addEdge(j.toString(), i.toString(), m)
-                    }
+        var nextVertexID = 0
+        var newVertices = ArrayDeque<String>()
+
+        newVertices.addLast("0")
+        nextVertexID++
+
+        // этот граф похож на зонтики укропа
+        while (true) {
+            if (newVertices.size == 0 || nextVertexID >= number)
+                break
+
+            val newVertex = newVertices.removeFirst()
+            val addVertices = Random.nextInt(5, 10)
+
+            println("adding $addVertices edges from $newVertex")
+
+            for (i in 0 until addVertices) {
+                val newVertexID = nextVertexID++
+                if (newVertexID >= number) {
+                    break
                 }
+                val edgeWeight = abs(Random.nextDouble())
+                addEdge(newVertex, newVertexID.toString(), edgeWeight)
+                newVertices.addLast(newVertexID.toString())
             }
         }
     }
