@@ -1,6 +1,5 @@
 package ru.spbu.graphgui.view
 
-import javafx.scene.input.ScrollEvent
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import ru.spbu.graphgui.controller.Scroller
@@ -8,17 +7,14 @@ import ru.spbu.graphgui.controller.VertexDragController
 import ru.spbu.graphgui.model.Edge
 import ru.spbu.graphgui.model.Graph
 import tornadofx.add
-import tornadofx.doubleProperty
 import tornadofx.find
-import tornadofx.onChange
 
 class GraphView<V, E>(private val graph: Graph<V, E> = Graph()) : Pane() {
     private val dragger = find(VertexDragController::class)
     init {
         val scroller = find(Scroller::class)
-        setOnScroll { e -> e?.let { scroller.scroll(it) } }
-//        widthProperty().onChange { println("Width=$it") }
-//        heightProperty().onChange { println("Width=$it") }
+        setOnScroll { e -> e?.let { scroller.scroll(it, parent.layoutXProperty().value + graphSetting.graph.widthAndHeight.value / 2,
+            parent.layoutYProperty().value + graphSetting.graph.widthAndHeight.value / 2) } }
         minWidth = graphSetting.graph.widthAndHeight.value
         minHeight = graphSetting.graph.widthAndHeight.value
     }

@@ -28,7 +28,7 @@ object graphSetting {
 
     fun createRandomGraphTree(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
         var nextVertexID = 0
-        var newVertices = ArrayDeque<String>()
+        val newVertices = ArrayDeque<String>()
 
         newVertices.addLast("0")
         nextVertexID++
@@ -56,7 +56,8 @@ object graphSetting {
     }
 
     fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
-        for (i in (0 until number)) {
+        for (i in 0 until number) {
+            addVertex(i.toString())
             for (j in i + 1 until number) {
                 val a = abs(Random.nextInt() % (1.0 / graph.probabilityOfCreationAnEdge.value)).toInt()
                 val b = abs(Random.nextInt() % 2)
@@ -84,4 +85,22 @@ object graphSetting {
             addEdge(array[0], array[1], array[6].toDouble())
         }
     }
+
+//    private fun readJdbc() {
+//        Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
+//            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+//        }
+//        return transaction {
+//            Graph<String, Double>().apply {
+//                Nodes.selectAll().forEach {
+//                    addVertex(
+//                        it[Nodes.name]
+//                    )
+//                }
+//                Edges.selectAll().forEach {
+//                    addEdge(it[Edges.sourceNode].value, it[Edges.targetNode].value, it[Edges.weight])
+//                }
+//            }
+//        }
+//    }
 }

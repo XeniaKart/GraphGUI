@@ -6,6 +6,7 @@ import nl.cwts.networkanalysis.LeidenAlgorithm
 import nl.cwts.networkanalysis.Network
 import nl.cwts.networkanalysis.run.RunNetworkClustering
 import java.util.*
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.ArrayDeque
 
 class CommunityDetection {
@@ -18,10 +19,7 @@ class CommunityDetection {
         val int2vertex = hashMapOf<Int, String>()
         val vertex2int = hashMapOf<String, Int>()
 
-        val edges = arrayOfNulls<ArrayList<Int>>(2)
-        edges[0] = ArrayList(100)
-        edges[1] = ArrayList(100)
-        val weights = edgeWeights.toDoubleArray()
+        val edges = Array<MutableList<Int>>(2) { ArrayList(100) }
 
         for (i in sourceVertex.indices) {
             if (!vertex2int.contains(sourceVertex[i])) {
@@ -36,25 +34,22 @@ class CommunityDetection {
                 vertex2int[targetVertex[i]] = newVertexID
             }
 
-            edges[0]!!.add(vertex2int[sourceVertex[i]]!!)
-            edges[1]!!.add(vertex2int[targetVertex[i]]!!)
+            edges[0].add(vertex2int[sourceVertex[i]]!!)
+            edges[1].add(vertex2int[targetVertex[i]]!!)
         }
 
-        val edges2 = arrayOfNulls<IntArray>(2)
-        edges2[0] = edges[0]!!.toIntArray()
-        edges2[1] = edges[1]!!.toIntArray()
-
+        val edges2 = edges.map { it.toIntArray() }.toTypedArray()
         val resolution = RunNetworkClustering.DEFAULT_RESOLUTION
 //        val resolution = 0.2
         val iterations = RunNetworkClustering.DEFAULT_N_ITERATIONS
         val randomness = RunNetworkClustering.DEFAULT_RANDOMNESS
 
-        var network = Network(nextVertexID, true, edges2, weights, false, true)
+        var network = Network(nextVertexID, true, edges2, edgeWeights.toDoubleArray(), false, true)
         val initialClustering = Clustering(network.nNodes)
         network = network.createNormalizedNetworkUsingAssociationStrength()
 
         val resolution2: Double = resolution
-        val random = Random()
+        val random = ThreadLocalRandom.current()
 
         val algorithm: IterativeCPMClusteringAlgorithm = LeidenAlgorithm(
             resolution2,
