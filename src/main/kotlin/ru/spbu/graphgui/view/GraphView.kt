@@ -13,15 +13,15 @@ class GraphView<V, E>(private val graph: Graph<V, E> = Graph()) : Pane() {
     private val dragger = find(VertexDragController::class)
     init {
         val scroller = find(Scroller::class)
-        setOnScroll { e -> e?.let { scroller.scroll(it, parent.layoutXProperty().value + graphSetting.graph.widthAndHeight.value / 2,
-            parent.layoutYProperty().value + graphSetting.graph.widthAndHeight.value / 2) } }
-        minWidth = graphSetting.graph.widthAndHeight.value
-        minHeight = graphSetting.graph.widthAndHeight.value
+        setOnScroll { e -> e?.let { scroller.scroll(it, parent.layoutXProperty().value + graphCreator.graph.widthAndHeight.value / 2,
+            parent.layoutYProperty().value + graphCreator.graph.widthAndHeight.value / 2) } }
+        minWidth = graphCreator.graph.widthAndHeight.value
+        minHeight = graphCreator.graph.widthAndHeight.value
     }
 
     val vertices by lazy {
         graph.vertices().associateWith {
-            VertexView(it, 0.0, 0.0, graphSetting.vertex.radius, Color.RED)
+            VertexView(it, 0.0, 0.0, graphCreator.vertex.radius, Color.RED)
         }
     }
 

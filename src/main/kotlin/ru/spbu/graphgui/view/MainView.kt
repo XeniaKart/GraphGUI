@@ -2,35 +2,18 @@ package ru.spbu.graphgui.view
 
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.IntegerProperty
-import ru.spbu.graphgui.dataBase.*
 import javafx.geometry.Orientation
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ScrollPane
 import javafx.scene.control.ToggleGroup
-import javafx.scene.paint.Color
 import javafx.stage.FileChooser
-import org.gephi.graph.api.Graph
-import org.gephi.graph.api.GraphController
-import org.gephi.io.exporter.api.ExportController
-import org.gephi.io.importer.api.EdgeDirectionDefault
-import org.gephi.io.importer.api.ImportController
-import org.gephi.io.processor.plugin.DefaultProcessor
-import org.gephi.layout.plugin.forceAtlas2.ForceAtlas2
-import org.gephi.layout.spi.Layout
-import org.gephi.project.api.ProjectController
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.openide.util.Lookup
-import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedDirected
-import ru.spbu.graphgui.centrality.BetweennessCenralityWeightedUnidirected
+import ru.spbu.graphgui.centrality.*
 import tornadofx.*
 import java.io.*
-import kotlin.math.floor
-import kotlin.random.Random
 import org.gephi.graph.api.Node as GephiNode
-import ru.spbu.graphgui.community.CommunityDetection
-import java.sql.Connection
+import ru.spbu.graphgui.community.*
+import ru.spbu.graphgui.workWithFiles.*
+import ru.spbu.graphgui.layout.*
 
 class MainView : View("Graph") {
     private val numberOfIterationsProperty = intProperty(10000)
@@ -60,7 +43,11 @@ class MainView : View("Graph") {
             graphCreate = true
             graph = readSql("sql.sqlite")
             targetPath = "lastGraph.csv"
-            csvSave(targetPath)
+            csvSave(targetPath, graph)
+            sourcePath = "lastGraph.csv"
+        }
+        primaryStage.setOnCloseRequest {
+            saveSql("sql.sqlite", graph)
         }
     }
 
@@ -154,7 +141,6 @@ class MainView : View("Graph") {
                     vvalue = 0.5
                     vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
                     hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
-//                    addEventFilter(ScrollEvent.SCROLL) { event -> event.consume() }
                 }
             }
         })
@@ -164,8 +150,8 @@ class MainView : View("Graph") {
                     saveFilePC()
                 }
                 item("Open").action {
-                    if (!chooseFilePC()) {
-                        drawRandomGraph()
+                    if (chooseFilePC().equals(".csv")) {
+                        graphCreator.drawRandomGraph(graph)
                     }
                 }
             }
@@ -173,13 +159,13 @@ class MainView : View("Graph") {
         left = hbox {
             vbox(10.0) {
                 vbox(5) {
-                    checkbox("Show vertices Id", graphSetting.vertex.label) {
+                    checkbox("Show vertices Id", graphCreator.vertex.label) {
                         action {
                             println("vertex labels are ${if (isSelected) "enabled" else "disabled"}")
                         }
                     }
-                    add(BorderpaneWithDoubleValue("Radius of nodes", "6.0", graphSetting.vertex.radius))
-                    add(BorderpaneWithDoubleValue("Width of lines", "1.0", graphSetting.edge.width))
+                    add(BorderpaneWithDoubleValue("Radius of nodes", "6.0", graphCreator.vertex.radius))
+                    add(BorderpaneWithDoubleValue("Width of lines", "1.0", graphCreator.edge.width))
                     hbox {
                         togglebutton("Directed", toggleGroup) {
                             action {
@@ -197,34 +183,34 @@ class MainView : View("Graph") {
                         BorderpaneWithDoubleValue(
                             "Probability of \nedge creation",
                             "0.5",
-                            graphSetting.graph.probabilityOfCreationAnEdge
+                            graphCreator.graph.probabilityOfCreationAnEdge
                         )
                     )
                     button("Create random graph") {
                         action {
                             targetPath = "randomGraph.csv"
-                            graph = GraphView(graphSetting.createRandomGraph(countNodesProperty.value))
-                            csvSave(targetPath)
+                            graph = GraphView(graphCreator.createRandomGraph(countNodesProperty.value))
+                            csvSave(targetPath, graph)
                             graphCreate = true
                             randomGraph = true
-                            drawRandomGraph()
+                            graphCreator.drawRandomGraph(graph)
                         }
                     }
                     button("Create random tree graph") {
                         action {
                             targetPath = "randomGraph.csv"
-                            graph = GraphView(graphSetting.createRandomGraphTree(countNodesProperty.value))
-                            csvSave(targetPath)
+                            graph = GraphView(graphCreator.createRandomGraphTree(countNodesProperty.value))
+                            csvSave(targetPath, graph)
                             graphCreate = true
                             randomGraph = true
-                            drawRandomGraph()
+                            graphCreator.drawRandomGraph(graph)
                         }
                     }
                     separator(Orientation.HORIZONTAL)
                     button("Calculate Betweenness Centrality") {
                         action {
                             runAsync {
-                                calculateBetweennessCentrality()
+                                calculateBetweennessCentality(graph, boolDirect)
                             } success {}
 
                         }
@@ -232,7 +218,7 @@ class MainView : View("Graph") {
                     button("Detect communities") {
                         action {
                             runAsync {
-                                detectCommunities()
+                                detectCommunities(graph)
                             } success {}
                         }
                     }
@@ -257,9 +243,9 @@ class MainView : View("Graph") {
                             if (graphCreate) {
                                 runAsync {
                                     if (randomGraph) {
-                                        makeLayout(targetPath)
+                                        makeLayoutAndDraw(targetPath)
                                     } else {
-                                        makeLayout(sourcePath)
+                                        makeLayoutAndDraw(sourcePath)
                                     }
                                 } ui {}
                             }
@@ -274,7 +260,7 @@ class MainView : View("Graph") {
         }
     }
 
-    private fun chooseFilePC(): Boolean {
+    private fun chooseFilePC(): String {
         val file = chooseFile(
             "Choose file",
             arrayOf(
@@ -286,17 +272,20 @@ class MainView : View("Graph") {
             currentWindow
         )
         if (file.isEmpty()) {
-            return true
+            return "empty"
         }
         sourcePath = file.first().toString()
         if (sourcePath.drop(sourcePath.length - 4).equals(".csv")) {
-            graph = GraphView(graphSetting.readGraph(file.first()))
+            graph = GraphView(readGraph(file.first()))
+            graphCreate = true
+            randomGraph = false
+            return ".csv"
         } else {
             graph = readSql(file.first().toString())
+            graphCreate = true
+            randomGraph = false
+            return ".sqlite"
         }
-        graphCreate = true
-        randomGraph = false
-        return false
     }
 
     private fun saveFilePC() {
@@ -316,36 +305,26 @@ class MainView : View("Graph") {
         if (graphCreate) {
             targetPath = file.first().toString()
             if (targetPath.drop(targetPath.length - 4).equals(".csv")) {
-                csvSave(targetPath)
+                csvSave(targetPath, graph)
             } else {
-                saveSql(targetPath)
+                saveSql(targetPath, graph)
             }
         }
     }
 
-    private fun csvSave(targetPath: String) {
-        val writer = PrintWriter(targetPath)
-        writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
-        var count = 1
-        for (i in graph!!.edgesVertex())
-            writer.print("${i.vertices.first},${i.vertices.second},Undirected, ${count++},,,${i.weight})\n")
-        writer.flush()
-        writer.close()
-    }
-
-    private fun drawRandomGraph() {
-        var numberOfNodes = graph!!.vertices.size * 3
-        if (numberOfNodes < 100) {
-            numberOfNodes = 100
-        }
-        for (y in graph!!.vertices.values) {
-            y.position =
-                Pair((2 * Random.nextDouble() - 1) * numberOfNodes, (2 * Random.nextDouble() - 1) * numberOfNodes)
-        }
-    }
-
-    private fun makeLayout(path: String) {
-        val graphForceAtlas2 = makeLayout2(path)
+    private fun makeLayoutAndDraw(path: String) {
+        val graphForceAtlas2 = makeLayout(
+            path,
+            numberOfIterations,
+            outboundAttractionDistribution,
+            progressValueProperty,
+            barnesHutThetaProperty,
+            gravityProperty,
+            jitterToleranceProperty,
+            scalingRatioProperty,
+            strongGravityMode,
+            linLogMode
+        )
         for (z: Int in 0 until graph!!.vertices().size) {
             val n: GephiNode = graphForceAtlas2.nodes.drop(z).first()
             for (y: VertexView<String> in graph!!.vertices.values) {
@@ -356,280 +335,4 @@ class MainView : View("Graph") {
             }
         }
     }
-
-    private fun detectCommunities() {
-        val sourceVertex = ArrayDeque<String>()
-        val targetVertex = ArrayDeque<String>()
-        val edgeWeights = ArrayDeque<Double>()
-
-        if (graph != null) {
-            for (i in graph!!.edgesVertex()) {
-                sourceVertex.addLast(i.vertices.first)
-                targetVertex.addLast(i.vertices.second)
-                edgeWeights.addLast(i.weight)
-            }
-
-            val communities = CommunityDetection().detectCommunities(sourceVertex, targetVertex, edgeWeights)
-            val communitiesColors = hashMapOf<Int, Color>()
-
-            val clrRandom = Random(99) // всегда с того же числа, чтобы получать тот же порядок цветов
-            for (i in communities) {
-                if (!communitiesColors.contains(i.value)) {
-                    communitiesColors[i.value] = Color(
-                        clrRandom.nextDouble(),
-                        clrRandom.nextDouble(),
-                        clrRandom.nextDouble(),
-                        1.0
-                    )
-                }
-
-                for (j in graph!!.vertices()) {
-                    if (i.key == j.vertex) {
-                        j.color = communitiesColors[i.value]!!
-                    }
-                }
-            }
-        }
-    }
-
-    private fun calculateBetweennessCentrality() {
-        if (graph != null) {
-            val graphBeetwCent1: BetweennessCenralityWeightedDirected
-            val graphBeetwCent2: BetweennessCenralityWeightedUnidirected
-            val valueCentralities: HashMap<String, Double>
-            val distinctVertex = ArrayDeque<String>()
-            val sourceVertex = ArrayDeque<String>()
-            val targetVertex = ArrayDeque<String>()
-            val edgeWeight = ArrayDeque<Double>()
-            for (i in graph!!.verticesKeys()) {
-                distinctVertex.addLast(i)
-            }
-            for (i in graph!!.edgesVertex()) {
-                sourceVertex.addLast(i.vertices.first)
-                targetVertex.addLast(i.vertices.second)
-                edgeWeight.addLast(i.weight)
-            }
-            if (boolDirect) {
-                graphBeetwCent1 = BetweennessCenralityWeightedDirected()
-                valueCentralities =
-                    graphBeetwCent1.betweennessCentralityScoreDirected(
-                        distinctVertex,
-                        sourceVertex,
-                        targetVertex,
-                        edgeWeight
-                    )
-            } else {
-                graphBeetwCent2 = BetweennessCenralityWeightedUnidirected()
-                valueCentralities =
-                    graphBeetwCent2.betweennessCentralityScoreUndirected(
-                        distinctVertex,
-                        sourceVertex,
-                        targetVertex,
-                        edgeWeight
-                    )
-            }
-            val minimum = valueCentralities.values.minOrNull()
-            val maximum = valueCentralities.values.maxOrNull()
-            var intervals = 0.0
-            if ((maximum != null) && (minimum != null)) {
-                intervals = (maximum - minimum) / 7
-            }
-            for (i in valueCentralities) {
-                when {
-                    i.value >= minimum!! && i.value < minimum + intervals -> setColor(i, Color.RED)
-                    i.value >= minimum + intervals && i.value < minimum + 2 * intervals -> setColor(i, Color.ORANGE)
-                    i.value >= minimum + 2 * intervals && i.value < minimum + 3 * intervals -> setColor(i, Color.YELLOW)
-                    i.value >= minimum + 3 * intervals && i.value < minimum + 4 * intervals -> setColor(i, Color.GREEN)
-                    i.value >= minimum + 4 * intervals && i.value < minimum + 5 * intervals -> setColor(i, Color.AQUA)
-                    i.value >= minimum + 5 * intervals && i.value < minimum + 6 * intervals -> setColor(i, Color.BLUE)
-                    else -> setColor(i, Color.PURPLE)
-                }
-            }
-        }
-    }
-
-    private fun setColor(i: MutableMap.MutableEntry<String, Double>, color: Color) {
-        for (j in graph!!.vertices()) {
-            if (i.key == j.vertex) {
-                j.color = color
-                break
-            }
-        }
-    }
-
-    private fun saveSql(path: String) {
-        Database.connect("jdbc:sqlite:$path", "org.sqlite.JDBC").also {
-            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-        }
-        transaction {
-            addLogger(StdOutSqlLogger)
-            SchemaUtils.drop(Nodes, Edges)
-            SchemaUtils.create(Nodes, Edges)
-            Nodes.batchInsert(graph!!.vertices()) {
-                this[Nodes.id] = it.vertex
-                this[Nodes.name] = it.vertex
-                this[Nodes.color] = it.color.toString()
-                this[Nodes.coordX] = it.position.first
-                this[Nodes.coordY] = it.position.second
-                this[Nodes.radius] = it.radius
-            }
-            Edges.batchInsert(graph!!.edgesVertex()) {
-                this[Edges.sourceNode] = it.vertices.first
-                this[Edges.targetNode] = it.vertices.second
-                this[Edges.weight] = it.weight
-            }
-        }
-    }
-
-    private fun readSql(path: String): GraphView<String, Double> {
-        Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
-            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-        }
-        return transaction {
-            val graph = ru.spbu.graphgui.model.Graph<String, Double>().apply {
-                Nodes.selectAll().forEach {
-                    addVertex(it[Nodes.name])
-                }
-                Edges.selectAll().forEach {
-                    addEdge(it[Edges.sourceNode].value, it[Edges.targetNode].value, it[Edges.weight])
-                }
-            }
-            GraphView(graph).apply {
-                Nodes.selectAll().forEach {
-                    for (i in vertices()) {
-                        if (it[Nodes.name] == i.vertex) {
-                            i.position = Pair(it[Nodes.coordX], it[Nodes.coordY])
-                            i.color = c(it[Nodes.color])
-                            graphSetting.vertex.radius.value = it[Nodes.radius]
-                            break
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun writeOutput(g: Graph, formats: Set<String?>, output: String?) {
-        try {
-            val ec = Lookup.getDefault().lookup(ExportController::class.java)
-            for (format in formats) {
-                ec.exportFile(
-                    File(output + if (output!!.toLowerCase().endsWith(".$format")) "" else ".$format"),
-                    ec.getExporter(format)
-                )
-            }
-        } catch (x: IOException) {
-            x.printStackTrace()
-        }
-    }
-
-    private fun makeLayout2(sourcePath: String): Graph {
-        val startTime = System.currentTimeMillis()
-        val seed: Long? = null
-        val threadCount = Runtime.getRuntime().availableProcessors()
-        val formats: MutableSet<String?> = HashSet()
-        val coordsFile: File? = null
-        val file = File(sourcePath)
-        if (!file.exists()) {
-            System.err.println("$file not found.")
-        }
-        val output = "myGraph"
-        if (numberOfIterations <= 0) {
-            System.err.println("Number of iterations must be not positive!")
-        }
-        formats.add("gexf")
-        formats.add("csv")
-        if (formats.size == 0) {
-            formats.add("txt")
-        }
-        val pc = Lookup.getDefault().lookup(ProjectController::class.java)
-        pc.newProject()
-        val workspace = pc.currentWorkspace
-        val importController = Lookup.getDefault().lookup(
-            ImportController::class.java
-        )
-        val graphModel = Lookup.getDefault().lookup(GraphController::class.java).graphModel
-        val container = importController.importFile(file)
-        val g: Graph = run {
-            container.loader.setEdgeDefault(EdgeDirectionDefault.UNDIRECTED)
-            graphModel.undirectedGraph
-        }
-        importController.process(container, DefaultProcessor(), workspace)
-        val layout = ForceAtlas2(null)
-        layout.setGraphModel(graphModel)
-        val random = if (seed != null) java.util.Random(seed) else java.util.Random()
-        for (node in g.nodes) {
-            node.setX(((0.01 + random.nextDouble()) * 1000).toFloat() - 500)
-            node.setY(((0.01 + random.nextDouble()) * 1000).toFloat() - 500)
-        }
-        if (coordsFile != null) {
-            val idToNode: MutableMap<Any, GephiNode> = java.util.HashMap()
-            for (n in g.nodes) {
-                idToNode[n.id] = n
-            }
-            val br = BufferedReader(FileReader(coordsFile))
-            var sep = "\t"
-            var s = br.readLine()
-            for (test in arrayOf("\t", ",")) {
-                if (s.indexOf(test) != -1) {
-                    sep = test
-                    break
-                }
-            }
-            val header = listOf(*s.split(sep.toRegex()).toTypedArray())
-            val idIndex = header.indexOf("id")
-            val xIndex = header.indexOf("x")
-            val yIndex = header.indexOf("y")
-            while (br.readLine().also { s = it } != null) {
-                val tokens = s.split(sep.toRegex()).toTypedArray()
-                val id = tokens[idIndex]
-                val n = idToNode[id]
-                if (n != null) {
-                    n.setX(tokens[xIndex].toFloat())
-                    n.setY(tokens[yIndex].toFloat())
-                } else {
-                    System.err.println("$id not found")
-                }
-            }
-            br.close()
-        }
-        layout.barnesHutTheta = barnesHutThetaProperty.value
-        layout.jitterTolerance = jitterToleranceProperty.value
-        layout.isLinLogMode = linLogMode
-        layout.scalingRatio = scalingRatioProperty.value
-        layout.isStrongGravityMode = strongGravityMode
-        layout.gravity = gravityProperty.value
-        layout.isOutboundAttractionDistribution = outboundAttractionDistribution
-        layout.threadsCount = threadCount
-        layout.initAlgo()
-        val layout1: Layout = layout
-        val shutdownThread: Thread = object : Thread() {
-            override fun run() {
-                layout1.endAlgo()
-            }
-        }
-        Runtime.getRuntime().addShutdownHook(shutdownThread)
-        if (numberOfIterations > 0) {
-            var lastPercent = 0
-            for (iteration in 0 until numberOfIterations) {
-                layout.goAlgo()
-                val percent = floor(100 * (iteration + 1.0) / numberOfIterations).toInt()
-                progressValue = percent / 100.0
-                if (percent != lastPercent) {
-                    print("*")
-                    lastPercent = percent
-                    if (percent % 25 == 0) {
-                        println("$percent%")
-                    }
-                }
-            }
-        }
-        Runtime.getRuntime().removeShutdownHook(shutdownThread)
-        layout.endAlgo()
-        writeOutput(g, formats, output)
-        val endTime = System.currentTimeMillis()
-        println("Time = " + (endTime - startTime) / 1000.0 + "s")
-        return g
-    }
 }
-

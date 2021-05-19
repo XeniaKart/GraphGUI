@@ -3,12 +3,11 @@ package ru.spbu.graphgui.view
 import ru.spbu.graphgui.model.Graph
 import tornadofx.booleanProperty
 import tornadofx.doubleProperty
-import java.io.File
 import kotlin.math.abs
 import kotlin.random.Random
 
 @Suppress("ClassName")
-object graphSetting {
+object graphCreator {
 
     object vertex {
         val radius = doubleProperty(6.0)
@@ -71,14 +70,16 @@ object graphSetting {
         }
     }
 
-    fun readGraph(file: File): Graph<String, Double> = Graph<String, Double>().apply {
-        if (!file.exists()) {
-            System.err.println("$file not found.")
-        }
-        val lines = file.readLines()
-        for (line in lines.drop(1)) {
-            val array = line.split(",")
-            addEdge(array[0], array[1], array[6].toDouble())
+    fun drawRandomGraph(graph: GraphView<String, Double>?) {
+        graph?.let {
+            var numberOfNodes = graph.vertices.size * 3
+            if (numberOfNodes < 100) {
+                numberOfNodes = 100
+            }
+            for (y in graph.vertices.values) {
+                y.position =
+                    Pair((2 * Random.nextDouble() - 1) * numberOfNodes, (2 * Random.nextDouble() - 1) * numberOfNodes)
+            }
         }
     }
 }

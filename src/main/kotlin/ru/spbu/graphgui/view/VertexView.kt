@@ -17,10 +17,10 @@ open class VertexView<V>(
     }
 
     var position: Pair<Double, Double>
-        get() = centerX - graphSetting.graph.widthAndHeight.value / 2 to centerY - graphSetting.graph.widthAndHeight.value / 2
+        get() = centerX - graphCreator.graph.widthAndHeight.value / 2 to centerY - graphCreator.graph.widthAndHeight.value / 2
         set(value) {
-            centerX = value.first + graphSetting.graph.widthAndHeight.value / 2
-            centerY = value.second + graphSetting.graph.widthAndHeight.value / 2
+            centerX = value.first + graphCreator.graph.widthAndHeight.value / 2
+            centerY = value.second + graphCreator.graph.widthAndHeight.value / 2
         }
 
     var color: Color
@@ -30,7 +30,7 @@ open class VertexView<V>(
         }
 
     var label = text(vertex.toString()) {
-        visibleProperty().bind(graphSetting.vertex.label)
+        visibleProperty().bind(graphCreator.vertex.label)
         xProperty().bind(centerXProperty().subtract(layoutBounds.width / 2))
         yProperty().bind(centerYProperty().add(radiusProperty()).add(layoutBounds.height))
     }

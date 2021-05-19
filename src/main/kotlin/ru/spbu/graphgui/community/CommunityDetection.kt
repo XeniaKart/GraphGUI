@@ -79,7 +79,6 @@ class CommunityDetection {
         val vertex2cluster = hashMapOf<String, Int>()
         for (i in 0 until finalClustering.nNodes) {
             val cluster = finalClustering.getCluster(i)
-            println("$i -> $cluster")
             vertex2cluster[int2vertex[i]!!] = cluster
         }
 

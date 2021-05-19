@@ -16,11 +16,11 @@ class EdgeView<E, V>(
         startYProperty().bind(first.centerYProperty())
         endXProperty().bind(second.centerXProperty())
         endYProperty().bind(second.centerYProperty())
-        strokeWidthProperty().bind(graphSetting.edge.width)
+        strokeWidthProperty().bind(graphCreator.edge.width)
     }
 
     val label = text(edge.weight.toString()) {
-        visibleWhen(graphSetting.edge.label)
+        visibleWhen(graphCreator.edge.label)
         xProperty().bind(
             startXProperty().add(endXProperty()).divide(2).subtract(layoutBounds.width / 2)
         )
