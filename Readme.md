@@ -5,28 +5,28 @@
 1. отображения меток вершин.
 
     
-      Show vertices id
+        Show vertices id
 
 2. изменения радиуса вершин.
 
     
-      Radius of nodes
+        Radius of nodes
 
 3. изменения толщины ребер.
 
     
-      Width of lines
+        Width of lines
 
 4. изменения направления ребер (кнопки).
 
 
-      Directed <-> Undirected
+        Directed <-> Undirected
 
 5. создания случайных графов двумя алгоритмами
 
 
-      Create random graph
-      Create random tree graph
+        Create random graph
+        Create random tree graph
 
 5.1 а так же следующие настройки для их создания: изменение максимального
 количества вершин и вероятности соединения этих вершин ребрами.
@@ -43,14 +43,14 @@
 7. выделения сообществ при помощи алгоритма "Leiden", сообщества выделяются случайными цветами.
 
 
-      Detect communities
+        Detect communities
 
 8. разложить граф при помощи алгоритма "ForceAtlas2"
    (имеется возможность отслеживать прогресс раскладки в 
    "Progress bar").
 
 
-      Make layout
+        Make layout
 
 Имеется возможность настройки следующих параметров для разложения графа:
 
