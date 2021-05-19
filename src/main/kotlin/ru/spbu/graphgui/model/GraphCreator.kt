@@ -54,7 +54,6 @@ object graphCreator {
 
     fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
         for (i in 0 until number) {
-            addVertex(i.toString())
             for (j in i + 1 until number) {
                 val a = abs(Random.nextInt() % (1.0 / graph.probabilityOfCreationAnEdge.value)).toInt()
                 val b = abs(Random.nextInt() % 2)

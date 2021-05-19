@@ -235,9 +235,9 @@ class MainView : View("Graph") {
                         }
                     }
                     add(BorderpaneWithDoubleValue("Gravity", "1.0", gravityProperty))
-                    add(BorderpaneWithDoubleValue("Jitter tolerance", "1.0", jitterToleranceProperty))
+                    add(BorderpaneWithDoubleValue("Tolerance", "1.0", jitterToleranceProperty))
                     add(BorderpaneWithDoubleValue("Scaling ratio", "2.0", scalingRatioProperty))
-                    add(BorderpaneWithDoubleValue("Barnes hut theta", "1.2", barnesHutThetaProperty))
+                    add(BorderpaneWithDoubleValue("Barnes-Hut", "1.2", barnesHutThetaProperty))
                     button("Make layout") {
                         action {
                             if (graphCreate) {

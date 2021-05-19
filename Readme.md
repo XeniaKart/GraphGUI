@@ -62,7 +62,7 @@
 
     strongGravityMode
 
-8.3 LinLogMode (TO DO).
+8.3 Режим слабой гравитации.
 
     LinLogMode 
 
@@ -70,17 +70,17 @@
 
     Gravity
 
-8.5 Jitter tolerance (TO DO).
+8.5 Настройка колебаний (отвечает за скорость раскладки).
 
-    Jitter tolerance
+    Tolerance
 
-8.6 Scaling ratio (TO DO).
+8.6 Настройка коэффициента масштабирования.
 
     Scaling ratio
 
-8.7 Barnes hut theta (TO DO).
+8.7 Настройка оптимизации Барнса-Хата.
 
-    Barnes hut theta
+    Barnes-Hut
 
 9. Приложение способно открывать графы в формате CSV и SQLite таблицы, 
    
