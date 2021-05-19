@@ -34,7 +34,4 @@ open class VertexView<V>(
         xProperty().bind(centerXProperty().subtract(layoutBounds.width / 2))
         yProperty().bind(centerYProperty().add(radiusProperty()).add(layoutBounds.height))
     }
-//        set(value) {
-//            fill = text(value.toString())
-//        }
 }

@@ -2,7 +2,7 @@ package ru.spbu.graphgui.view
 
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.IntegerProperty
-import ru.spbu.graphgui.view.jdbc.*
+import ru.spbu.graphgui.dataBase.*
 import javafx.geometry.Orientation
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ScrollPane
@@ -28,7 +28,6 @@ import tornadofx.*
 import java.io.*
 import kotlin.math.floor
 import kotlin.random.Random
-import kotlin.system.exitProcess
 import org.gephi.graph.api.Node as GephiNode
 import ru.spbu.graphgui.community.CommunityDetection
 import java.sql.Connection
@@ -47,7 +46,7 @@ class MainView : View("Graph") {
     private var strongGravityMode = false
     private var outboundAttractionDistribution = false
     private var randomGraph = false
-    var fileJdbc = File("sql.sqlite")
+    var fileSql = File("sql.sqlite")
     private var graphProperty = objectProperty<GraphView<String, Double>>()
     private var graph: GraphView<String, Double>? by graphProperty
     private var boolDirect = true
@@ -57,10 +56,10 @@ class MainView : View("Graph") {
     private val toggleGroup = ToggleGroup()
 
     init {
-        if (fileJdbc.exists()) {
+        if (fileSql.exists()) {
             graphCreate = true
-            graph = readJdbc()
-            targetPath = "randomGraph.csv"
+            graph = readSql("sql.sqlite")
+            targetPath = "lastGraph.csv"
             csvSave(targetPath)
         }
     }
@@ -161,17 +160,12 @@ class MainView : View("Graph") {
         })
         top = MenuBar().apply {
             menu("File") {
-                item("Save as csv").action {
+                item("Save").action {
                     saveFilePC()
                 }
-                item("Open file").action {
+                item("Open").action {
                     if (!chooseFilePC()) {
                         drawRandomGraph()
-                    }
-                }
-                item("Save as JDBC", "Shortcut+S").action {
-                    if (graphCreate) {
-                        addJdbc()
                     }
                 }
             }
@@ -187,8 +181,16 @@ class MainView : View("Graph") {
                     add(BorderpaneWithDoubleValue("Radius of nodes", "6.0", graphSetting.vertex.radius))
                     add(BorderpaneWithDoubleValue("Width of lines", "1.0", graphSetting.edge.width))
                     hbox {
-                        togglebutton("Directed", toggleGroup)
-                        togglebutton("Undirected", toggleGroup)
+                        togglebutton("Directed", toggleGroup) {
+                            action {
+                                boolDirect = true
+                            }
+                        }
+                        togglebutton("Undirected", toggleGroup) {
+                            action {
+                                boolDirect = false
+                            }
+                        }
                     }
                     add(BorderpaneWithIntValue("Max count of nodes", "30", countNodesProperty))
                     add(
@@ -274,8 +276,11 @@ class MainView : View("Graph") {
 
     private fun chooseFilePC(): Boolean {
         val file = chooseFile(
-            "Выбрать файл",
-            arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
+            "Choose file",
+            arrayOf(
+                FileChooser.ExtensionFilter("CSV", "*.csv"),
+                FileChooser.ExtensionFilter("SQLite", "*.sqlite")
+            ),
             null,
             FileChooserMode.Single,
             currentWindow
@@ -283,8 +288,12 @@ class MainView : View("Graph") {
         if (file.isEmpty()) {
             return true
         }
-        graph = GraphView(graphSetting.readGraph(file.first()))
         sourcePath = file.first().toString()
+        if (sourcePath.drop(sourcePath.length - 4).equals(".csv")) {
+            graph = GraphView(graphSetting.readGraph(file.first()))
+        } else {
+            graph = readSql(file.first().toString())
+        }
         graphCreate = true
         randomGraph = false
         return false
@@ -292,8 +301,11 @@ class MainView : View("Graph") {
 
     private fun saveFilePC() {
         val file = chooseFile(
-            "Выбрать файл",
-            arrayOf(FileChooser.ExtensionFilter("CSV", "*.csv")),
+            "Choose directory",
+            arrayOf(
+                FileChooser.ExtensionFilter("CSV", "*.csv"),
+                FileChooser.ExtensionFilter("SQLite", "*.sqlite")
+            ),
             null,
             FileChooserMode.Save,
             currentWindow
@@ -301,8 +313,14 @@ class MainView : View("Graph") {
         if (file.isEmpty()) {
             return
         }
-        targetPath = file.first().toString()
-        csvSave(targetPath)
+        if (graphCreate) {
+            targetPath = file.first().toString()
+            if (targetPath.drop(targetPath.length - 4).equals(".csv")) {
+                csvSave(targetPath)
+            } else {
+                saveSql(targetPath)
+            }
+        }
     }
 
     private fun csvSave(targetPath: String) {
@@ -439,8 +457,8 @@ class MainView : View("Graph") {
         }
     }
 
-    private fun addJdbc() {
-        Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
+    private fun saveSql(path: String) {
+        Database.connect("jdbc:sqlite:$path", "org.sqlite.JDBC").also {
             TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
         }
         transaction {
@@ -463,7 +481,7 @@ class MainView : View("Graph") {
         }
     }
 
-    private fun readJdbc(): GraphView<String, Double> {
+    private fun readSql(path: String): GraphView<String, Double> {
         Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
             TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
         }
@@ -502,7 +520,6 @@ class MainView : View("Graph") {
             }
         } catch (x: IOException) {
             x.printStackTrace()
-            exitProcess(1)
         }
     }
 
@@ -515,12 +532,10 @@ class MainView : View("Graph") {
         val file = File(sourcePath)
         if (!file.exists()) {
             System.err.println("$file not found.")
-            exitProcess(1)
         }
         val output = "myGraph"
         if (numberOfIterations <= 0) {
             System.err.println("Number of iterations must be not positive!")
-            exitProcess(1)
         }
         formats.add("gexf")
         formats.add("csv")

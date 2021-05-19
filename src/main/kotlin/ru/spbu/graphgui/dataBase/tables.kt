@@ -1,4 +1,4 @@
-package ru.spbu.graphgui.view.jdbc
+package ru.spbu.graphgui.dataBase
 
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Table
@@ -16,6 +16,5 @@ object Nodes : IdTable<String>() {
 object Edges : Table() {
     val sourceNode = reference("Source", Nodes)
     val targetNode = reference("Target", Nodes)
-    //    val direction = varchar("direction", 255)
     val weight = double("weight")
 }

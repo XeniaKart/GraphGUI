@@ -6,7 +6,6 @@ import tornadofx.doubleProperty
 import java.io.File
 import kotlin.math.abs
 import kotlin.random.Random
-import kotlin.system.exitProcess
 
 @Suppress("ClassName")
 object graphSetting {
@@ -33,7 +32,6 @@ object graphSetting {
         newVertices.addLast("0")
         nextVertexID++
 
-        // этот граф похож на зонтики укропа
         while (true) {
             if (newVertices.size == 0 || nextVertexID >= number)
                 break
@@ -76,31 +74,11 @@ object graphSetting {
     fun readGraph(file: File): Graph<String, Double> = Graph<String, Double>().apply {
         if (!file.exists()) {
             System.err.println("$file not found.")
-            exitProcess(1)
         }
         val lines = file.readLines()
-
         for (line in lines.drop(1)) {
             val array = line.split(",")
             addEdge(array[0], array[1], array[6].toDouble())
         }
     }
-
-//    private fun readJdbc() {
-//        Database.connect("jdbc:sqlite:sql.sqlite", "org.sqlite.JDBC").also {
-//            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-//        }
-//        return transaction {
-//            Graph<String, Double>().apply {
-//                Nodes.selectAll().forEach {
-//                    addVertex(
-//                        it[Nodes.name]
-//                    )
-//                }
-//                Edges.selectAll().forEach {
-//                    addEdge(it[Edges.sourceNode].value, it[Edges.targetNode].value, it[Edges.weight])
-//                }
-//            }
-//        }
-//    }
 }

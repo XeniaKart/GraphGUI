@@ -7,7 +7,6 @@ class Graph<V, E> {
     private val edges = hashMapOf<Pair<V, V>, Edge<E, V>>()
 
     fun vertices(): Collection<V> {
-//        println (vertices.values)
         return vertices.keys
     }
 
