@@ -4,11 +4,8 @@ import ru.spbu.graphgui.model.Graph
 import tornadofx.booleanProperty
 import tornadofx.doubleProperty
 import java.io.File
-import java.io.PrintWriter
 import kotlin.math.abs
 import kotlin.random.Random
-import kotlin.system.exitProcess
-
 
 @Suppress("ClassName")
 object graphSetting {
@@ -18,73 +15,70 @@ object graphSetting {
         val label = booleanProperty()
     }
 
+    object graph {
+        val widthAndHeight = doubleProperty(500_000.0)
+        var probabilityOfCreationAnEdge = doubleProperty(0.5)
+    }
+
     object edge {
+        val width = doubleProperty(1.0)
         val label = booleanProperty()
     }
 
-    fun createRandomGraph(path: String, number: Int): Graph<String, Double> = Graph<String, Double>().apply {
+    fun createRandomGraphTree(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
+        var nextVertexID = 0
+        val newVertices = ArrayDeque<String>()
 
-//        val file = File(path)
-        val writer = PrintWriter(path)
-        writer.print("Source,Target,Type,Id,Label,timeset,Weight\n")
-        var count = 0
-        for (i in (0..number)) {
-//            addVertex(i.toString())
-            for (j in i + 1..number) {
-                val a = abs(Random.nextInt() % 6)
+        newVertices.addLast("0")
+        nextVertexID++
+
+        while (true) {
+            if (newVertices.size == 0 || nextVertexID >= number)
+                break
+
+            val newVertex = newVertices.removeFirst()
+            val addVertices = Random.nextInt(5, 10)
+
+            println("adding $addVertices edges from $newVertex")
+
+            for (i in 0 until addVertices) {
+                val newVertexID = nextVertexID++
+                if (newVertexID >= number) {
+                    break
+                }
+                val edgeWeight = abs(Random.nextDouble())
+                addEdge(newVertex, newVertexID.toString(), edgeWeight)
+                newVertices.addLast(newVertexID.toString())
+            }
+        }
+    }
+
+    fun createRandomGraph(number: Int): Graph<String, Double> = Graph<String, Double>().apply {
+        for (i in 0 until number) {
+            addVertex(i.toString())
+            for (j in i + 1 until number) {
+                val a = abs(Random.nextInt() % (1.0 / graph.probabilityOfCreationAnEdge.value)).toInt()
                 val b = abs(Random.nextInt() % 2)
                 val m = abs(Random.nextDouble())
                 if (a == 0) {
-                    count++
                     if (b == 0) {
                         addEdge(i.toString(), j.toString(), m)
-                        writer.print("$i,$j,Undirected,$count,,,1\n")
                     } else {
                         addEdge(j.toString(), i.toString(), m)
-                        writer.print("$j,$i,Undirected,$count,,,1\n")
                     }
                 }
             }
         }
-        writer.flush()
-        writer.close()
-
-//        addVertex("A")
-//        addVertex("B")
-//        addVertex("C")
-//        addVertex("D")
-//        addVertex("E")
-//        addVertex("F")
-//
-//        addVertex("G")
-//
-//        addEdge("G", "F", 0.2)
-//        addEdge("F", "D", 0.2)
-//        addEdge("B", "C", 0.9)
-//        addEdge("C", "D", 0.57)
-//        addEdge("D", "B", 1.0)
-//        addEdge("D", "E", 0.8)
-//        addEdge("E", "G", 0.4)
-//        addEdge("F", "E", 0.6)
-//        addEdge("A", "B", 0.7)
-//        addEdge("C", "A", 1.3)
-//        addEdge("A", "D", 0.3)
     }
 
-
-    fun readGraph(path: String): Graph<String, Double> = Graph<String, Double>().apply {
-        val file = File(path)
+    fun readGraph(file: File): Graph<String, Double> = Graph<String, Double>().apply {
         if (!file.exists()) {
             System.err.println("$file not found.")
-            exitProcess(1)
         }
         val lines = file.readLines()
-
         for (line in lines.drop(1)) {
             val array = line.split(",")
-//            println(array)
             addEdge(array[0], array[1], array[6].toDouble())
         }
     }
-
 }

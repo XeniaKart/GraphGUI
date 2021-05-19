@@ -10,17 +10,17 @@ open class VertexView<V>(
     x: Double,
     y: Double,
     r: DoubleProperty,
-    color: Color,
+    color: Color
 ) : Circle(x, y, r.get(), color) {
     init {
         radiusProperty().bind(r)
     }
 
     var position: Pair<Double, Double>
-        get() = centerX to centerY
+        get() = centerX - graphSetting.graph.widthAndHeight.value / 2 to centerY - graphSetting.graph.widthAndHeight.value / 2
         set(value) {
-            centerX = value.first
-            centerY = value.second
+            centerX = value.first + graphSetting.graph.widthAndHeight.value / 2
+            centerY = value.second + graphSetting.graph.widthAndHeight.value / 2
         }
 
     var color: Color
@@ -34,7 +34,4 @@ open class VertexView<V>(
         xProperty().bind(centerXProperty().subtract(layoutBounds.width / 2))
         yProperty().bind(centerYProperty().add(radiusProperty()).add(layoutBounds.height))
     }
-//        set(value) {
-//            fill = text(value.toString())
-//        }
 }

@@ -3,11 +3,12 @@ package ru.spbu.graphgui.view
 import javafx.scene.shape.Line
 import ru.spbu.graphgui.model.Edge
 import tornadofx.text
+import tornadofx.visibleWhen
 
 class EdgeView<E, V>(
     edge: Edge<E, V>,
     first: VertexView<V>,
-    second: VertexView<V>,
+    second: VertexView<V>
 ) : Line() {
 
     init {
@@ -15,10 +16,11 @@ class EdgeView<E, V>(
         startYProperty().bind(first.centerYProperty())
         endXProperty().bind(second.centerXProperty())
         endYProperty().bind(second.centerYProperty())
+        strokeWidthProperty().bind(graphSetting.edge.width)
     }
 
-    val label = text(edge.element.toString()) {
-        visibleProperty().bind(graphSetting.edge.label)
+    val label = text(edge.weight.toString()) {
+        visibleWhen(graphSetting.edge.label)
         xProperty().bind(
             startXProperty().add(endXProperty()).divide(2).subtract(layoutBounds.width / 2)
         )

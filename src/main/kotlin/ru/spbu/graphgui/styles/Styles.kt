@@ -4,6 +4,7 @@ import tornadofx.Stylesheet
 import tornadofx.loadFont
 import tornadofx.px
 
+
 class Styles : Stylesheet() {
     companion object {
         private val jbmono = loadFont("/fonts/jb-mono-regular.ttf", 8)
@@ -12,7 +13,7 @@ class Styles : Stylesheet() {
     init {
         root {
             jbmono?.let { font = it }
-            fontSize = 12.px
+            fontSize = 14.px
         }
     }
 }

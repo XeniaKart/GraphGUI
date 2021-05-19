@@ -1,78 +1,30 @@
 Source,Target,Type,Id,Label,timeset,Weight
-0,2,Undirected,1,,,1
-0,22,Undirected,2,,,1
-29,0,Undirected,3,,,1
-13,1,Undirected,4,,,1
-19,1,Undirected,5,,,1
-9,2,Undirected,6,,,1
-23,2,Undirected,7,,,1
-24,2,Undirected,8,,,1
-2,29,Undirected,9,,,1
-3,17,Undirected,10,,,1
-3,19,Undirected,11,,,1
-25,3,Undirected,12,,,1
-27,3,Undirected,13,,,1
-29,3,Undirected,14,,,1
-20,4,Undirected,15,,,1
-4,26,Undirected,16,,,1
-6,5,Undirected,17,,,1
-5,8,Undirected,18,,,1
-5,9,Undirected,19,,,1
-10,5,Undirected,20,,,1
-5,12,Undirected,21,,,1
-13,5,Undirected,22,,,1
-5,16,Undirected,23,,,1
-5,21,Undirected,24,,,1
-5,25,Undirected,25,,,1
-26,5,Undirected,26,,,1
-5,28,Undirected,27,,,1
-10,6,Undirected,28,,,1
-6,12,Undirected,29,,,1
-6,19,Undirected,30,,,1
-25,6,Undirected,31,,,1
-27,6,Undirected,32,,,1
-6,29,Undirected,33,,,1
-7,8,Undirected,34,,,1
-7,13,Undirected,35,,,1
-22,7,Undirected,36,,,1
-10,8,Undirected,37,,,1
-14,8,Undirected,38,,,1
-8,15,Undirected,39,,,1
-16,8,Undirected,40,,,1
-8,19,Undirected,41,,,1
-10,9,Undirected,42,,,1
-9,16,Undirected,43,,,1
-9,18,Undirected,44,,,1
-9,21,Undirected,45,,,1
-23,9,Undirected,46,,,1
-24,9,Undirected,47,,,1
-17,10,Undirected,48,,,1
-19,10,Undirected,49,,,1
-21,10,Undirected,50,,,1
-23,10,Undirected,51,,,1
-11,14,Undirected,52,,,1
-25,11,Undirected,53,,,1
-12,16,Undirected,54,,,1
-17,12,Undirected,55,,,1
-24,13,Undirected,56,,,1
-29,13,Undirected,57,,,1
-20,14,Undirected,58,,,1
-23,14,Undirected,59,,,1
-15,24,Undirected,60,,,1
-15,29,Undirected,61,,,1
-29,16,Undirected,62,,,1
-21,17,Undirected,63,,,1
-26,17,Undirected,64,,,1
-17,27,Undirected,65,,,1
-18,19,Undirected,66,,,1
-22,18,Undirected,67,,,1
-18,27,Undirected,68,,,1
-29,18,Undirected,69,,,1
-19,21,Undirected,70,,,1
-19,24,Undirected,71,,,1
-23,21,Undirected,72,,,1
-30,21,Undirected,73,,,1
-28,22,Undirected,74,,,1
-23,30,Undirected,75,,,1
-25,28,Undirected,76,,,1
-28,29,Undirected,77,,,1
+0,1,Undirected, 1,,,0.03602568159206965)
+0,2,Undirected, 2,,,0.9939674548186039)
+0,3,Undirected, 3,,,0.8580661115273549)
+0,4,Undirected, 4,,,0.373709736053376)
+0,5,Undirected, 5,,,0.730076600597458)
+0,6,Undirected, 6,,,0.534469831981327)
+2,20,Undirected, 7,,,0.7195552781178388)
+1,10,Undirected, 8,,,0.5940831154538996)
+1,11,Undirected, 9,,,0.8177598488645719)
+1,12,Undirected, 10,,,0.8096889018355012)
+1,13,Undirected, 11,,,0.788793388871049)
+4,28,Undirected, 12,,,0.33969185216629916)
+4,29,Undirected, 13,,,0.19172024136854138)
+1,7,Undirected, 14,,,0.7801002697370194)
+1,8,Undirected, 15,,,0.21749050959442962)
+1,9,Undirected, 16,,,0.3888019431397369)
+3,21,Undirected, 17,,,0.7980401587667915)
+3,22,Undirected, 18,,,0.5873031070753021)
+3,23,Undirected, 19,,,0.8365354330570405)
+3,24,Undirected, 20,,,0.500917296563922)
+3,25,Undirected, 21,,,0.4043051090833566)
+2,14,Undirected, 22,,,0.6241086287488632)
+3,26,Undirected, 23,,,0.857458317871928)
+2,15,Undirected, 24,,,0.5250565167471762)
+3,27,Undirected, 25,,,0.0215281462259167)
+2,16,Undirected, 26,,,0.5467510705712891)
+2,17,Undirected, 27,,,0.21278037228817825)
+2,18,Undirected, 28,,,0.2635747771792506)
+2,19,Undirected, 29,,,0.43592596506638426)
