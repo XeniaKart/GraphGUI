@@ -325,12 +325,14 @@ class MainView : View("Graph") {
             strongGravityMode,
             linLogMode
         )
-        for (z: Int in 0 until graph!!.vertices().size) {
-            val n: GephiNode = graphForceAtlas2.nodes.drop(z).first()
-            for (y: VertexView<String> in graph!!.vertices.values) {
-                if (y.vertex == n.id.toString()) {
-                    y.position = Pair(n.x().toDouble(), n.y().toDouble())
-                    break
+        graph?.let {
+            for (z: Int in 0 until it.vertices().size) {
+                val n: GephiNode = graphForceAtlas2.nodes.drop(z).first()
+                for (y: VertexView<String> in it.vertices.values) {
+                    if (y.vertex == n.id.toString()) {
+                        y.position = Pair(n.x().toDouble(), n.y().toDouble())
+                        break
+                    }
                 }
             }
         }
