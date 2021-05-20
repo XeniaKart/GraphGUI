@@ -235,9 +235,9 @@ class MainView : View("Graph") {
                         }
                     }
                     add(BorderpaneWithDoubleValue("Gravity", "1.0", gravityProperty))
-                    add(BorderpaneWithDoubleValue("Jitter tolerance", "1.0", jitterToleranceProperty))
+                    add(BorderpaneWithDoubleValue("Tolerance", "1.0", jitterToleranceProperty))
                     add(BorderpaneWithDoubleValue("Scaling ratio", "2.0", scalingRatioProperty))
-                    add(BorderpaneWithDoubleValue("Barnes hut theta", "1.2", barnesHutThetaProperty))
+                    add(BorderpaneWithDoubleValue("Barnes-Hut", "1.2", barnesHutThetaProperty))
                     button("Make layout") {
                         action {
                             if (graphCreate) {
@@ -325,12 +325,14 @@ class MainView : View("Graph") {
             strongGravityMode,
             linLogMode
         )
-        for (z: Int in 0 until graph!!.vertices().size) {
-            val n: GephiNode = graphForceAtlas2.nodes.drop(z).first()
-            for (y: VertexView<String> in graph!!.vertices.values) {
-                if (y.vertex == n.id.toString()) {
-                    y.position = Pair(n.x().toDouble(), n.y().toDouble())
-                    break
+        graph?.let {
+            for (z: Int in 0 until it.vertices().size) {
+                val n: GephiNode = graphForceAtlas2.nodes.drop(z).first()
+                for (y: VertexView<String> in it.vertices.values) {
+                    if (y.vertex == n.id.toString()) {
+                        y.position = Pair(n.x().toDouble(), n.y().toDouble())
+                        break
+                    }
                 }
             }
         }
